@@ -896,6 +896,10 @@ function dismissWeeklyReview(){
    rafraîchissement (on garde la position de défilement et le focus) ou un
    vrai changement de vue (on repart en haut, on donne le focus à la saisie). */
 let renderedViewKey = null;
+/* Naviguer ne doit jamais déposer un curseur dans un champ de saisie. Le
+   focus n'est donné que lorsqu'on vient d'écrire quelque chose et qu'on
+   enchaîne : cette variable porte cette intention d'un rendu au suivant. */
+let focusAfterRender = null;
 function viewKey(){
   const box = document.getElementById('search');
   if(box && box.value.trim()) return 'search';
@@ -966,6 +970,11 @@ function render(){
   updateTimerBar();
   renderedViewKey = viewKey();
   if(main && renderedViewKey===keyBefore) main.scrollTop = scrollBefore;
+  if(focusAfterRender){
+    const el = document.getElementById(focusAfterRender);
+    focusAfterRender = null;
+    if(el) el.focus();
+  }
 }
 
 function renderSidebar(){
@@ -1123,10 +1132,14 @@ function renderInbox(main){
   }
 
   const input = document.getElementById('inbox-input');
-  const doAdd = ()=>{ if(input.value.trim()){ addInboxItem(input.value); } };
+  const doAdd = ()=>{
+    if(input.value.trim()){
+      focusAfterRender = 'inbox-input';
+      addInboxItem(input.value);
+    }
+  };
   document.getElementById('btn-add-inbox').onclick = doAdd;
   input.onkeydown = (e)=>{ if(e.key==='Enter') doAdd(); };
-  if(renderedViewKey!==viewKey()) input.focus();
 }
 
 function renderCalendar(main){
@@ -1583,12 +1596,12 @@ function renderProject(main, p){
     const dueStr = document.getElementById('new-task-due').value;
     const due = dueStr? new Date(dueStr+'T00:00:00').getTime() : null;
     if(input.value.trim()){
+      focusAfterRender = 'new-task-input';
       addTask(p.id, input.value, {priority:prio, due});
     }
   };
   document.getElementById('btn-add-task').onclick = doAdd;
   input.onkeydown = (e)=>{ if(e.key==='Enter') doAdd(); };
-  if(renderedViewKey!==viewKey()) input.focus();
 }
 
 /* La zone de notes épouse son contenu au lieu de le tronquer. Au-delà d'une
@@ -1825,7 +1838,7 @@ document.getElementById('btn-help').onclick = ()=>{
     <h3>Raccourcis</h3>
     <div class="help-list">
       <div><kbd>/</kbd> Rechercher</div>
-      <div><kbd>n</kbd> Nouvelle tâche (projet ouvert)</div>
+      <div><kbd>n</kbd> Écrire une nouvelle tâche (projet ou boîte de réception)</div>
       <div><kbd>p</kbd> Nouveau projet</div>
       <div><kbd>i</kbd> Capture rapide (inbox)</div>
       <div><kbd>Échap</kbd> Fermer / annuler / désélectionner</div>
@@ -1870,10 +1883,9 @@ document.addEventListener('keydown', (e)=>{
     const box = document.getElementById('search');
     if(box.value){ box.value=''; renderMain(); }
   }
-  else if(e.key==='n' && !editing && state.view.type==='project'){
-    e.preventDefault();
-    const el = document.getElementById('new-task-input');
-    if(el) el.focus();
+  else if(e.key==='n' && !editing){
+    const el = document.getElementById('new-task-input') || document.getElementById('inbox-input');
+    if(el){ e.preventDefault(); el.focus(); }
   }
   else if(e.key==='p' && !editing){
     e.preventDefault();
