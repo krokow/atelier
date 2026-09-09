@@ -160,8 +160,11 @@ input, textarea, select{ font-family:inherit; color:inherit; }
 .empty-state{ color:var(--text-faint); font-size:13.5px; padding-top:60px; text-align:center; }
 
 .project-header{ display:flex; align-items:baseline; gap:12px; margin-bottom:4px; }
-.project-title{ font-family:var(--serif); font-size:26px; font-weight:400; }
-.project-title[contenteditable]:focus{ outline:none; border-bottom:1px solid var(--border); }
+.project-title{
+  font-family:var(--serif); font-size:26px; font-weight:400;
+  border:1px solid transparent; border-radius:var(--radius);
+  padding:0 5px; margin:0 -5px;
+}
 .project-sub{ color:var(--text-faint); font-size:12.5px; margin-bottom:18px; }
 .project-actions{ display:flex; gap:6px; margin-left:auto; }
 
@@ -210,9 +213,21 @@ input, textarea, select{ font-family:inherit; color:inherit; }
 .check:hover{ border-color:var(--amber); }
 .task.done .check{ background:var(--green); border-color:var(--green); color:#0a1a0d; }
 .task-body{ flex:1; min-width:0; }
-.task-text{ font-size:13.5px; word-break:break-word; }
+.task-text{
+  font-size:13.5px; word-break:break-word;
+  width:fit-content; max-width:100%;
+  border:1px solid transparent; border-radius:var(--radius);
+  padding:1px 4px; margin:-1px -4px;
+}
 .task.done .task-text{ text-decoration:line-through; }
-.task-text[contenteditable]:focus{ outline:none; }
+/* L'édition est un état visible : on ne se retrouve jamais avec un curseur
+   qui clignote sans savoir pourquoi. */
+.task-text.editing, .project-title.editing{
+  border-color:var(--blue); background:var(--panel-2);
+  text-decoration:none; cursor:text;
+}
+.task-text.editing{ width:100%; }
+.task-text:focus, .project-title:focus{ outline:none; }
 .task-meta{ display:flex; flex-wrap:wrap; gap:6px; margin-top:5px; }
 .badge{ font-size:10.5px; padding:2px 6px; border-radius:2px; border:1px solid var(--border); color:var(--text-dim); }
 .badge.tag{ color:var(--blue); border-color:transparent; background:rgba(110,143,214,.12); cursor:pointer;}
@@ -1499,7 +1514,7 @@ function renderProject(main, p){
   let html = `
   <div class="project-header">
     <span class="dot" style="background:${p.color}; width:12px; height:12px;"></span>
-    <div class="project-title" contenteditable="true" id="proj-title">${escapeHtml(p.name)}</div>
+    <div class="project-title" id="proj-title" title="Double-cliquer pour renommer">${escapeHtml(p.name)}</div>
     <div class="project-actions">
       <button class="btn" id="btn-color">Couleur</button>
       <button class="btn" id="btn-archive">${p.archived?'Désarchiver':'Archiver'}</button>
@@ -1543,10 +1558,15 @@ function renderProject(main, p){
 
   bindTaskEvents(main);
 
-  document.getElementById('proj-title').onblur = (e)=>{
-    const val = e.target.textContent.trim();
-    if(val){ p.name = val; save(); renderSidebar(); }
+  const titleEl = document.getElementById('proj-title');
+  titleEl.ondblclick = (e)=> beginEdit(titleEl, e);
+  titleEl.onblur = ()=>{
+    endEdit(titleEl);
+    const val = titleEl.textContent.trim();
+    if(!val){ titleEl.textContent = p.name; return; }
+    if(val!==p.name){ p.name = val; save(); renderSidebar(); }
   };
+  titleEl.onkeydown = editKeys(titleEl, ()=> p.name);
   const notes = document.getElementById('notes');
   notes.oninput = (e)=>{ updateNotes(p.id, e.target.value); autoGrowNotes(); };
   document.getElementById('notes-toggle').onclick = ()=>{ notesExpanded = !notesExpanded; autoGrowNotes(); };
@@ -1602,7 +1622,7 @@ function taskRow(projectId, t, showProject){
   <div class="task ${t.done?'done':''} ${t.cancelled?'cancelled':''} ${overdue?'overdue':''}" data-task="${t.id}" data-proj="${projectId}">
     <div class="check" data-action="toggle">${t.done?'✓':''}</div>
     <div class="task-body">
-      <div class="task-text" contenteditable="true" data-action="edit">${escapeHtml(t.text)}</div>
+      <div class="task-text" data-action="edit" title="Double-cliquer pour modifier">${escapeHtml(t.text)}</div>
       <div class="task-meta">
         ${showProject? `<span class="badge" style="border-color:${t.projectColor}; color:${t.projectColor}">${escapeHtml(t.projectName)}</span>`:''}
         ${!t.done && !t.cancelled ? `<span class="badge status-${t.status||'todo'}" data-action="status" style="cursor:pointer">${statusLabel(t)}</span>` : ''}
@@ -1627,6 +1647,52 @@ function taskRow(projectId, t, showProject){
   </div>`;
 }
 
+/* L'édition en place ne démarre qu'au double-clic. Un clic simple ne pose
+   plus de curseur : il ne se passe rien tant qu'on n'a pas dit qu'on voulait
+   modifier le texte. */
+function caretRangeAt(x, y){
+  if(document.caretRangeFromPoint) return document.caretRangeFromPoint(x, y);
+  if(document.caretPositionFromPoint){
+    const pos = document.caretPositionFromPoint(x, y);
+    if(!pos) return null;
+    const r = document.createRange();
+    r.setStart(pos.offsetNode, pos.offset); r.collapse(true);
+    return r;
+  }
+  return null;
+}
+function beginEdit(el, ev){
+  if(el.isContentEditable) return;
+  el.dataset.original = el.textContent;
+  el.contentEditable = 'true';
+  el.classList.add('editing');
+  el.focus();
+  const sel = window.getSelection();
+  let range = ev ? caretRangeAt(ev.clientX, ev.clientY) : null;
+  if(!range || !el.contains(range.startContainer)){
+    range = document.createRange();
+    range.selectNodeContents(el);
+    range.collapse(false);
+  }
+  sel.removeAllRanges();
+  sel.addRange(range);
+}
+function endEdit(el){
+  el.contentEditable = 'false';
+  el.classList.remove('editing');
+}
+/* Entrée valide, Échap annule et remet le texte d'origine. */
+function editKeys(el, onCancel){
+  return (e)=>{
+    if(e.key==='Enter'){ e.preventDefault(); el.blur(); }
+    else if(e.key==='Escape'){
+      e.stopPropagation();
+      el.textContent = onCancel();
+      el.blur();
+    }
+  };
+}
+
 function bindTaskEvents(scope){
   scope.querySelectorAll('.task').forEach(row=>{
     const projectId = row.dataset.proj;
@@ -1636,11 +1702,15 @@ function bindTaskEvents(scope){
     row.querySelector('[data-action="cancel"]').onclick = ()=> toggleCancelled(projectId, taskId);
     row.querySelector('[data-action="delete"]').onclick = ()=> deleteTask(projectId, taskId);
     const textEl = row.querySelector('[data-action="edit"]');
+    textEl.ondblclick = (e)=> beginEdit(textEl, e);
     textEl.onblur = ()=>{
+      endEdit(textEl);
       const val = textEl.textContent.trim();
-      if(val) updateTask(projectId, taskId, {text:val});
+      const before = textEl.dataset.original || '';
+      if(!val){ textEl.textContent = before; return; }
+      if(val!==before.trim()) updateTask(projectId, taskId, {text:val});
     };
-    textEl.onkeydown = (e)=>{ if(e.key==='Enter'){ e.preventDefault(); textEl.blur(); } };
+    textEl.onkeydown = editKeys(textEl, ()=> textEl.dataset.original || '');
 
     const dueBtn = row.querySelector('[data-action="due"]');
     if(dueBtn) dueBtn.onclick = ()=>{
@@ -1752,13 +1822,14 @@ document.getElementById('btn-help').onclick = ()=>{
   const bg = document.createElement('div');
   bg.className='modal-bg';
   bg.innerHTML = `<div class="modal">
-    <h3>Raccourcis clavier</h3>
+    <h3>Raccourcis</h3>
     <div class="help-list">
       <div><kbd>/</kbd> Rechercher</div>
       <div><kbd>n</kbd> Nouvelle tâche (projet ouvert)</div>
       <div><kbd>p</kbd> Nouveau projet</div>
       <div><kbd>i</kbd> Capture rapide (inbox)</div>
-      <div><kbd>Échap</kbd> Fermer / désélectionner</div>
+      <div><kbd>Échap</kbd> Fermer / annuler / désélectionner</div>
+      <div style="margin-top:10px">Double-clic sur le texte d'une tâche ou sur le nom d'un projet pour le modifier, <kbd>Entrée</kbd> pour valider.</div>
     </div>
     <div class="modal-actions"><button class="btn" id="close-help">Fermer</button></div>
   </div>`;
