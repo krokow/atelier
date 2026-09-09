@@ -19,6 +19,7 @@
   --blue:#6e8fd6;
   --red:#d97070;
   --green:#7fb88a;
+  --track:#232a34;
   --radius:3px;
   --serif: Georgia, 'Iowan Old Style', 'Palatino Linotype', 'Book Antiqua', Palatino, serif;
   --sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
@@ -37,6 +38,7 @@
   --blue:#3f5da3;
   --red:#b8453f;
   --green:#3f7a4d;
+  --track:#e4e0d6;
 }
 *{box-sizing:border-box; margin:0; padding:0;}
 body{
@@ -55,13 +57,14 @@ input, textarea, select{ font-family:inherit; color:inherit; }
 ::-webkit-scrollbar-thumb{ background:var(--border); border-radius:5px; }
 ::-webkit-scrollbar-track{ background:transparent; }
 
-#app{ display:grid; grid-template-columns:220px 1fr 300px; grid-template-rows:48px 1fr; height:100vh; }
+#app{ display:grid; grid-template-columns:220px 1fr 300px; grid-template-rows:auto 1fr; height:100vh; }
 #app.no-right{ grid-template-columns:220px 1fr; }
 
 /* ---------- TOPBAR ---------- */
 #topbar{
   grid-column:1/-1;
   display:flex; align-items:center; gap:14px;
+  min-height:48px;
   padding:0 16px;
   border-bottom:1px solid var(--border-soft);
   background:var(--panel);
@@ -75,6 +78,50 @@ input, textarea, select{ font-family:inherit; color:inherit; }
 }
 #search:focus{ outline:none; border-color:var(--blue); }
 .topbar-spacer{ flex:1; }
+
+/* ---------- CHRONO GLOBAL (barre du haut) ---------- */
+#timerbar{
+  display:flex; align-items:center; gap:12px;
+  padding:5px 12px; margin:5px 0;
+  border:1px solid var(--border-soft); border-radius:var(--radius);
+  background:var(--panel-2);
+  flex:0 1 auto; min-width:0;
+}
+#timerbar.running{ border-color:var(--border); }
+.tbar-modes{ display:flex; }
+.tbar-mode{
+  background:transparent; border:1px solid var(--border-soft); color:var(--text-dim);
+  font-size:12px; padding:4px 9px; white-space:nowrap;
+}
+.tbar-mode:first-child{ border-radius:var(--radius) 0 0 var(--radius); }
+.tbar-mode:last-child{ border-radius:0 var(--radius) var(--radius) 0; margin-left:-1px; }
+.tbar-mode:hover{ color:var(--text); border-color:var(--border); }
+.tbar-mode.active{ color:#fff; font-weight:600; }
+.tbar-mode.active.meeting{ background:var(--blue); border-color:var(--blue); }
+.tbar-mode.active.progress{ background:var(--green); border-color:var(--green); color:#0d1a10; }
+.tbar-elapsed{
+  font-family:var(--serif); font-size:16px; font-variant-numeric:tabular-nums;
+  color:var(--text-faint); min-width:74px; text-align:center;
+}
+.tbar-elapsed.active{ color:var(--text); }
+.tbar-pause{
+  background:transparent; border:1px solid var(--border-soft); border-radius:var(--radius);
+  color:var(--text-dim); font-size:11px; padding:4px 8px; line-height:1.4; white-space:nowrap;
+}
+.tbar-pause:hover{ color:var(--text); border-color:var(--border); }
+.tbar-pause:disabled{ opacity:.35; cursor:default; }
+/* Jauge de la journée : la piste est une teinte atténuée de la même rampe
+   que le remplissage, pour que l'état se lise sur toute la barre. */
+.tbar-meter{
+  width:104px; height:5px; background:var(--track); border-radius:3px; overflow:hidden; flex-shrink:1; min-width:40px;
+}
+.tbar-meter-fill{ height:100%; background:var(--blue); border-radius:3px; transition:width .4s ease; }
+.tbar-meter-fill.reached{ background:var(--green); }
+.tbar-day{
+  font-size:11.5px; color:var(--text-dim); white-space:nowrap; cursor:pointer;
+  font-variant-numeric:tabular-nums;
+}
+.tbar-day:hover{ color:var(--text); }
 .icon-btn{
   background:transparent; border:1px solid transparent; color:var(--text-dim);
   padding:6px 9px; border-radius:var(--radius); font-size:13px; display:flex; align-items:center; gap:6px;
@@ -119,13 +166,19 @@ input, textarea, select{ font-family:inherit; color:inherit; }
 .project-actions{ display:flex; gap:6px; margin-left:auto; }
 
 .notes-box{
-  width:100%; min-height:70px; resize:vertical;
+  width:100%; min-height:112px; resize:vertical; overflow-y:auto;
   background:var(--panel); border:1px solid var(--border-soft); border-radius:var(--radius);
   padding:12px 14px; color:var(--text); font-size:13.5px; line-height:1.6;
-  margin-bottom:26px;
+  display:block;
 }
 .notes-box:focus{ outline:none; border-color:var(--border); }
 .notes-box::placeholder{ color:var(--text-faint); }
+.notes-foot{ display:flex; align-items:center; gap:10px; margin:5px 0 26px; min-height:16px; }
+.notes-toggle{
+  background:none; border:none; color:var(--text-faint); font-size:11.5px; padding:0;
+}
+.notes-toggle:hover{ color:var(--blue); }
+.notes-hint{ font-size:11px; color:var(--text-faint); margin-left:auto; }
 
 .section-title{ font-size:11px; text-transform:uppercase; letter-spacing:.08em; color:var(--text-faint); margin:22px 0 10px; display:flex; align-items:center; gap:10px;}
 .section-title .line{ flex:1; height:1px; background:var(--border-soft); }
@@ -196,9 +249,26 @@ input, textarea, select{ font-family:inherit; color:inherit; }
 .hero-clock{ font-family:var(--serif); font-size:22px; color:var(--text-dim); font-variant-numeric:tabular-nums; }
 
 .stat-grid{ display:grid; grid-template-columns:repeat(4,1fr); gap:1px; background:var(--border-soft); border:1px solid var(--border-soft); margin-bottom:34px; }
-.stat{ background:var(--panel); padding:16px 18px; border-left:2px solid transparent; }
-.stat-num{ font-family:var(--serif); font-size:30px; }
+.stat{ background:var(--panel); padding:15px 17px 14px; border-left:2px solid transparent; display:flex; flex-direction:column; }
+.stat-head{ display:flex; align-items:baseline; gap:8px; }
+.stat-num{ font-family:var(--serif); font-size:30px; line-height:1.05; }
+.stat-delta{ font-size:11.5px; color:var(--text-faint); white-space:nowrap; }
+.stat-delta.up{ color:var(--green); }
+.stat-delta.down{ color:var(--red); }
 .stat-label{ font-size:11px; color:var(--text-faint); text-transform:uppercase; letter-spacing:.07em; margin-top:4px; }
+.stat-sub{ font-size:11.5px; color:var(--text-dim); margin-top:9px; line-height:1.45; }
+.stat-sub em{ font-style:normal; color:var(--text); }
+/* Micro-jauge de répartition : 2px de fond entre les segments, jamais de
+   bordure autour des marques. */
+.stat-meter{ display:flex; gap:2px; height:4px; margin-top:10px; border-radius:2px; overflow:hidden; }
+.stat-meter span{ display:block; height:100%; border-radius:2px; }
+.stat-meter .seg-todo{ background:var(--text-faint); }
+.stat-meter .seg-progress{ background:var(--blue); }
+.stat-meter .seg-waiting{ background:var(--amber); }
+.stat-meter .seg-empty{ background:var(--track); flex:1; }
+.stat-track{ height:4px; background:var(--track); border-radius:2px; margin-top:10px; overflow:hidden; }
+.stat-track-fill{ height:100%; background:var(--blue); border-radius:2px; }
+.stat-track-fill.reached{ background:var(--green); }
 .stat.accent-red{ border-left-color:var(--red); }
 .stat.accent-amber{ border-left-color:var(--amber); }
 .stat.accent-green{ border-left-color:var(--green); }
@@ -252,6 +322,10 @@ input, textarea, select{ font-family:inherit; color:inherit; }
 .timer-mode-btn.running.progress{ background:var(--green); border-color:var(--green); color:#0d1a10; }
 .timer-live{ text-align:center; font-family:var(--serif); font-size:26px; font-variant-numeric:tabular-nums; margin-bottom:14px; color:var(--text-dim); }
 .timer-live.active{ color:var(--text); }
+.timer-day{ border-top:1px solid var(--border-soft); padding-top:12px; margin-bottom:14px; }
+.timer-day-head{ display:flex; justify-content:space-between; align-items:baseline; font-size:11px; color:var(--text-faint); text-transform:uppercase; letter-spacing:.06em; }
+.timer-day-head span:last-child{ text-transform:none; letter-spacing:0; font-size:12.5px; color:var(--text-dim); font-variant-numeric:tabular-nums; }
+.timer-day .stat-track{ margin-top:7px; }
 .timer-week{ display:flex; gap:22px; border-top:1px solid var(--border-soft); padding-top:12px; }
 .timer-week-item{ flex:1; }
 .timer-week-num{ font-size:16px; font-family:var(--serif); }
@@ -306,20 +380,32 @@ kbd{ background:var(--panel-2); border:1px solid var(--border); border-radius:3p
 /* ---------- RESPONSIVE ----------
    Trois paliers : colonnes resserrées, puis le panneau de droite passe en
    bandeau bas (rien n'est masqué), puis tout s'empile en une colonne. */
+@media (max-width:1320px){
+  #search{ max-width:230px; }
+  .tbar-day{ display:none; }
+}
 @media (max-width:1180px){
   #app{ grid-template-columns:196px 1fr 254px; }
   #main{ padding:24px 26px 60px; }
   .dash-row{ gap:28px; }
+  .stat-grid{ grid-template-columns:repeat(2,1fr); }
+}
+/* Sous ce seuil le chrono prend sa propre ligne plutôt que d'écraser
+   la recherche et les boutons. */
+@media (max-width:1120px){
+  #topbar{ flex-wrap:wrap; padding:0 14px 8px; }
+  #timerbar{ order:9; flex:1 1 100%; margin:0; }
+  .tbar-day{ display:block; margin-left:auto; }
+  .tbar-meter{ width:auto; flex:1 1 auto; max-width:none; }
 }
 @media (max-width:1020px){
-  #app{ grid-template-columns:190px 1fr; grid-template-rows:48px 1fr auto; }
+  #app{ grid-template-columns:190px 1fr; grid-template-rows:auto 1fr auto; }
   #rightpanel{
     grid-column:1/-1;
     border-left:none; border-top:1px solid var(--border-soft);
-    max-height:34vh; padding:14px 16px 20px;
+    max-height:28vh; padding:14px 16px 20px;
   }
   #main{ padding:22px 22px 40px; }
-  .stat-grid{ grid-template-columns:repeat(2,1fr); }
   .dash-row{ grid-template-columns:1fr; gap:4px; }
   .donut-grid{ grid-template-columns:repeat(auto-fill,minmax(104px,1fr)); }
 }
@@ -327,7 +413,9 @@ kbd{ background:var(--panel-2); border:1px solid var(--border); border-radius:3p
   body{ height:auto; overflow:auto; }
   #app{ grid-template-columns:1fr; grid-template-rows:auto auto 1fr auto; height:auto; min-height:100vh; }
   #topbar{ height:auto; min-height:48px; flex-wrap:wrap; gap:8px 10px; padding:9px 12px; }
-  #search{ order:9; flex:1 1 100%; max-width:none; }
+  #search{ order:8; flex:1 1 100%; max-width:none; }
+  #timerbar{ flex-wrap:wrap; gap:8px 10px; }
+  .tbar-elapsed{ min-width:66px; }
   #sidebar{
     border-right:none; border-bottom:1px solid var(--border-soft);
     overflow:visible;
@@ -347,6 +435,7 @@ kbd{ background:var(--panel-2); border:1px solid var(--border); border-radius:3p
   .hero{ flex-direction:column; align-items:flex-start; gap:8px; }
   .hero-greeting{ font-size:25px; }
   .stat-grid{ grid-template-columns:1fr; }
+  .tbar-meter{ max-width:none; }
   .timer-week{ flex-wrap:wrap; gap:12px; }
   .review-banner{ flex-wrap:wrap; gap:10px; }
   .review-stats{ gap:16px; }
@@ -361,6 +450,19 @@ kbd{ background:var(--panel-2); border:1px solid var(--border); border-radius:3p
   <div id="topbar">
     <div id="brand">Atelier<span>.</span></div>
     <input id="search" type="text" placeholder="Rechercher…  (/)">
+    <div class="topbar-spacer"></div>
+
+    <div id="timerbar">
+      <div class="tbar-modes">
+        <button class="tbar-mode meeting" data-mode="meeting">Réunion</button>
+        <button class="tbar-mode progress" data-mode="progress">Avancement</button>
+      </div>
+      <div class="tbar-elapsed" id="tbar-elapsed">00:00:00</div>
+      <button class="tbar-pause" id="tbar-pause">Pause</button>
+      <div class="tbar-meter" id="tbar-meter"><div class="tbar-meter-fill" id="tbar-meter-fill"></div></div>
+      <div class="tbar-day" id="tbar-day" title="Cliquer pour changer l'objectif quotidien">0 min / 8 h</div>
+    </div>
+
     <div class="topbar-spacer"></div>
     <button class="icon-btn" id="btn-capture" title="Capture rapide (i)">+ Capture</button>
     <button class="icon-btn" id="btn-theme" title="Thème">Thème</button>
@@ -405,9 +507,9 @@ function defaultState(){
     projects: [],
     trash: [],
     inbox: [],
-    timeTracking: { current:null, entries:[] },
+    timeTracking: { current:null, entries:[], lastMode:null },
     view: {type:'dashboard', projectId:null},
-    settings: {theme:'dark', showArchived:false, reviewDismissedDate:null},
+    settings: {theme:'dark', showArchived:false, reviewDismissedDate:null, dailyTargetHours:8},
     notified: {}
   };
 }
@@ -427,6 +529,8 @@ function normalizeState(s){
   if(s.settings.theme!=='light' && s.settings.theme!=='dark') s.settings.theme = 'dark';
   if(typeof s.settings.showArchived!=='boolean') s.settings.showArchived = false;
   if(!('reviewDismissedDate' in s.settings)) s.settings.reviewDismissedDate = null;
+  if(typeof s.settings.dailyTargetHours!=='number' || s.settings.dailyTargetHours<=0) s.settings.dailyTargetHours = 8;
+  if(['meeting','progress'].indexOf(s.timeTracking.lastMode)<0) s.timeTracking.lastMode = null;
   if(!s.notified || typeof s.notified!=='object') s.notified = {};
   if(!s.view || typeof s.view!=='object' || !s.view.type) s.view = d.view;
   s.projects.forEach(p=>{
@@ -699,13 +803,39 @@ function toggleTimer(mode){
   } else {
     if(tt.current) stopTimer();
     tt.current = {mode, start: now()};
+    tt.lastMode = mode;
     save(); render();
   }
+}
+/* Mettre en pause revient à clore la tranche en cours : le total du jour est
+   conservé, et « Reprendre » relance le dernier mode utilisé. */
+function resumeTimer(){
+  const tt = state.timeTracking;
+  if(tt.current) return;
+  toggleTimer(tt.lastMode || 'progress');
+}
+function modeLabel(mode){ return mode==='meeting' ? 'Réunion' : 'Avancement'; }
+function dailyTargetMs(){ return state.settings.dailyTargetHours * 3600000; }
+/* Temps travaillé aujourd'hui, chrono en cours compris. Rien n'est reporté
+   d'un jour sur l'autre : à minuit le total repart de zéro tout seul,
+   puisqu'il est recalculé depuis les entrées datées du jour. */
+function todayWorked(){
+  const day = startOfToday();
+  const tt = state.timeTracking;
+  let meeting=0, progress=0;
+  const add = (mode, ms)=>{ if(mode==='meeting') meeting+=ms; else progress+=ms; };
+  tt.entries.forEach(e=>{ if(e.date===day) add(e.mode, e.ms); });
+  if(tt.current){
+    const mode = tt.current.mode;
+    forEachDaySlice(tt.current.start, now(), (dayStart, ms)=>{ if(dayStart===day) add(mode, ms); });
+  }
+  return {meeting, progress, total: meeting+progress};
 }
 function stopTimer(){
   const tt = state.timeTracking;
   if(!tt.current) return;
   const mode = tt.current.mode;
+  tt.lastMode = mode;
   forEachDaySlice(tt.current.start, now(), (dayStart, ms)=>{
     if(ms>2000) tt.entries.push({id:uid(), date:dayStart, mode, ms});
   });
@@ -756,6 +886,60 @@ function viewKey(){
   if(box && box.value.trim()) return 'search';
   return state.view.type==='project' ? 'project:'+state.view.projectId : state.view.type;
 }
+function hms(ms){
+  const h = String(Math.floor(ms/3600000)).padStart(2,'0');
+  const m = String(Math.floor(ms/60000)%60).padStart(2,'0');
+  const sec = String(Math.floor(ms/1000)%60).padStart(2,'0');
+  return `${h}:${m}:${sec}`;
+}
+function updateTimerBar(){
+  const tt = state.timeTracking;
+  const cur = tt.current;
+  const elapsed = document.getElementById('tbar-elapsed');
+  if(!elapsed) return;
+  document.getElementById('timerbar').classList.toggle('running', !!cur);
+  document.querySelectorAll('.tbar-mode').forEach(b=>{
+    b.classList.toggle('active', !!cur && cur.mode===b.dataset.mode);
+    b.title = (cur && cur.mode===b.dataset.mode) ? 'Arrêter le chrono' : 'Démarrer « '+modeLabel(b.dataset.mode)+' »';
+  });
+  elapsed.textContent = cur ? hms(now()-cur.start) : '00:00:00';
+  elapsed.classList.toggle('active', !!cur);
+  elapsed.title = cur ? 'Séquence en cours — '+modeLabel(cur.mode) : 'Chrono à l\'arrêt';
+
+  const pause = document.getElementById('tbar-pause');
+  const resumable = !cur && !!tt.lastMode;
+  pause.textContent = cur ? 'Pause' : 'Reprendre';
+  pause.disabled = !cur && !resumable;
+  pause.title = cur ? 'Mettre en pause' : (resumable ? 'Reprendre « '+modeLabel(tt.lastMode)+' »' : 'Aucune séquence à reprendre');
+
+  const worked = todayWorked().total;
+  const target = dailyTargetMs();
+  const fill = document.getElementById('tbar-meter-fill');
+  fill.style.width = Math.min(100, worked/target*100) + '%';
+  fill.classList.toggle('reached', worked>=target);
+  const label = `${fmtDuration(worked)} sur un objectif de ${state.settings.dailyTargetHours} h`;
+  document.getElementById('tbar-meter').title = 'Journée : '+label;
+  const day = document.getElementById('tbar-day');
+  day.textContent = `${fmtDuration(worked)} / ${state.settings.dailyTargetHours} h`;
+  day.title = label + ' — cliquer pour changer l\'objectif';
+}
+function bindTimerBar(){
+  document.querySelectorAll('.tbar-mode').forEach(b=>{
+    b.onclick = ()=> toggleTimer(b.dataset.mode);
+  });
+  document.getElementById('tbar-pause').onclick = ()=>{
+    if(state.timeTracking.current) stopTimer(); else resumeTimer();
+  };
+  document.getElementById('tbar-day').onclick = ()=>{
+    const val = prompt('Objectif de travail par jour, en heures :', String(state.settings.dailyTargetHours));
+    if(val===null) return;
+    const h = parseFloat(String(val).replace(',','.'));
+    if(!isFinite(h) || h<=0 || h>24){ toast('Objectif invalide : indique un nombre d\'heures entre 1 et 24.'); return; }
+    state.settings.dailyTargetHours = Math.round(h*100)/100;
+    save(); render();
+  };
+}
+
 function render(){
   const main = document.getElementById('main');
   const keyBefore = renderedViewKey;
@@ -764,6 +948,7 @@ function render(){
   renderSidebar();
   renderMain();
   renderRightPanel();
+  updateTimerBar();
   renderedViewKey = viewKey();
   if(main && renderedViewKey===keyBefore) main.scrollTop = scrollBefore;
 }
@@ -823,13 +1008,13 @@ function renderRightPanel(){
   const pinned = tasks.filter(t=>t.pinned);
   const upcoming = tasks.filter(t=>t.due).sort((a,b)=>a.due-b.due).slice(0,25);
 
-  let html = `<div class="rp-title">Épinglées</div>`;
+  let html = `<div class="rp-title">Épinglées${pinned.length?' ('+pinned.length+')':''}</div>`;
   if(pinned.length===0) html += `<div class="rp-empty">Rien d'épinglé pour l'instant. Survole une tâche puis clique sur l'étoile.</div>`;
   pinned.forEach(t=>{
     html += rpItem(t);
   });
 
-  html += `<div class="rp-title" style="margin-top:24px">À venir</div>`;
+  html += `<div class="rp-title" style="margin-top:24px">À venir${upcoming.length?' ('+upcoming.length+')':''}</div>`;
   if(upcoming.length===0) html += `<div class="rp-empty">Aucune échéance planifiée. Ajoute une date à une tâche pour la voir ici.</div>`;
   upcoming.forEach(t=>{
     html += rpItem(t, true);
@@ -1038,11 +1223,15 @@ function getLast7DaysActivity(){
 function renderDashboard(main){
   const projects = activeProjects();
   const tasks = allTasks();
-  const activeCount = tasks.filter(t=>!t.done && !t.cancelled).length;
-  const overdue = tasks.filter(t=>isOverdue(t)).length;
-  const weekAgo = now()-7*24*3600*1000;
-  const doneWeek = tasks.filter(t=>t.done && t.completedAt && t.completedAt>weekAgo).length;
-  const pinnedCount = tasks.filter(t=>t.pinned && !t.done && !t.cancelled).length;
+  const open = tasks.filter(t=>!t.done && !t.cancelled);
+  const activeCount = open.length;
+  const byStatus = {todo:0, progress:0, waiting:0};
+  open.forEach(t=>{ byStatus[t.status||'todo']++; });
+  const overdueTasks = tasks.filter(isOverdue);
+  const overdue = overdueTasks.length;
+  const oldestOverdue = overdueTasks.reduce((acc,t)=> acc===null || t.due<acc ? t.due : acc, null);
+  const pinnedCount = open.filter(t=>t.pinned).length;
+  const pinnedOverdue = open.filter(t=>t.pinned && isOverdue(t)).length;
   const dateStr = new Date().toLocaleDateString('fr-FR', {weekday:'long', day:'numeric', month:'long'});
   const focus = getFocusTasks();
   const activity = getLast7DaysActivity();
@@ -1050,6 +1239,11 @@ function renderDashboard(main){
   const dayNames = ['dim','lun','mar','mer','jeu','ven','sam'];
   const todayKey = startOfToday();
   const thisWeekStart = startOfWeekMonday(now());
+  const prevWeekStart = addDays(thisWeekStart, -7);
+  const doneBetween = (from, to)=> tasks.filter(t=>t.done && t.completedAt && t.completedAt>=from && t.completedAt<to).length;
+  const doneWeek = doneBetween(thisWeekStart, addDays(thisWeekStart, 7));
+  const donePrevWeek = doneBetween(prevWeekStart, prevWeekStart + (now() - thisWeekStart));
+  const worked = todayWorked();
 
   let html = `
   <div class="hero">
@@ -1083,10 +1277,32 @@ function renderDashboard(main){
 
   html += `
   <div class="stat-grid">
-    <div class="stat accent-blue"><div class="stat-num">${activeCount}</div><div class="stat-label">Tâches en cours</div></div>
-    <div class="stat ${overdue?'accent-red':''}"><div class="stat-num" style="color:${overdue?'var(--red)':'inherit'}">${overdue}</div><div class="stat-label">En retard</div></div>
-    <div class="stat accent-green"><div class="stat-num">${doneWeek}</div><div class="stat-label">Validées cette semaine</div></div>
-    <div class="stat accent-amber"><div class="stat-num">${pinnedCount}</div><div class="stat-label">Épinglées</div></div>
+    <div class="stat accent-blue">
+      <div class="stat-head"><div class="stat-num">${activeCount}</div></div>
+      <div class="stat-label">Tâches en cours</div>
+      ${statusMeter(byStatus, activeCount)}
+      <div class="stat-sub">${statusBreakdown(byStatus, activeCount)}</div>
+    </div>
+    <div class="stat ${overdue?'accent-red':''}">
+      <div class="stat-head"><div class="stat-num" style="color:${overdue?'var(--red)':'inherit'}">${overdue}</div></div>
+      <div class="stat-label">En retard</div>
+      <div class="stat-sub">${overdue
+        ? `La plus ancienne remonte au <em>${fmtDate(oldestOverdue)}</em>, soit ${daysAgoLabel(oldestOverdue)}.`
+        : `Aucune échéance dépassée.`}</div>
+    </div>
+    <div class="stat accent-green">
+      <div class="stat-head"><div class="stat-num">${doneWeek}</div>${deltaBadge(doneWeek, donePrevWeek, true)}</div>
+      <div class="stat-label">Validées cette semaine</div>
+      <div class="stat-sub">${donePrevWeek
+        ? `<em>${donePrevWeek}</em> au même stade la semaine dernière.`
+        : `Rien n'avait été validé à ce stade la semaine dernière.`}</div>
+    </div>
+    <div class="stat accent-amber">
+      <div class="stat-head"><div class="stat-num">${fmtDuration(worked.total)}</div></div>
+      <div class="stat-label">Temps aujourd'hui</div>
+      <div class="stat-track"><div class="stat-track-fill ${worked.total>=dailyTargetMs()?'reached':''}" style="width:${Math.min(100, worked.total/dailyTargetMs()*100)}%"></div></div>
+      <div class="stat-sub">${Math.round(worked.total/dailyTargetMs()*100)} % de l'objectif de ${state.settings.dailyTargetHours} h · ${fmtDuration(worked.meeting)} en réunion</div>
+    </div>
   </div>
 
   <div class="dash-row">
@@ -1134,6 +1350,10 @@ function renderDashboard(main){
           <button class="timer-mode-btn progress" id="timer-progress">Avancement</button>
         </div>
         <div class="timer-live" id="timer-live">00:00:00</div>
+        <div class="timer-day">
+          <div class="timer-day-head"><span>Journée</span><span id="timer-day-val"></span></div>
+          <div class="stat-track"><div class="stat-track-fill" id="timer-day-fill"></div></div>
+        </div>
         <div class="timer-week" id="timer-week"></div>
       </div>
 
@@ -1180,6 +1400,37 @@ function renderDashboard(main){
   updateClock();
 }
 
+/* Écart signé par rapport à une période nommée. La couleur dit si le sens
+   de la variation est une bonne nouvelle, jamais le signe seul : le chiffre
+   de comparaison est toujours écrit en toutes lettres juste en dessous. */
+function deltaBadge(cur, prev, upIsGood){
+  const d = cur - prev;
+  if(d===0) return '';
+  const good = (d>0)===upIsGood;
+  return `<span class="stat-delta ${good?'up':'down'}">${d>0?'+':'\u2212'}${Math.abs(d)}</span>`;
+}
+function statusMeter(byStatus, total){
+  if(!total) return `<div class="stat-meter"><span class="seg-empty"></span></div>`;
+  const segs = [['todo','seg-todo'],['progress','seg-progress'],['waiting','seg-waiting']]
+    .filter(([k])=>byStatus[k]>0)
+    .map(([k,cls])=>`<span class="${cls}" style="flex:${byStatus[k]}"></span>`).join('');
+  return `<div class="stat-meter">${segs}</div>`;
+}
+function statusBreakdown(byStatus, total){
+  if(!total) return 'Aucune tâche ouverte.';
+  const parts = [];
+  if(byStatus.todo) parts.push(`<em>${byStatus.todo}</em> à faire`);
+  if(byStatus.progress) parts.push(`<em>${byStatus.progress}</em> en cours`);
+  if(byStatus.waiting) parts.push(`<em>${byStatus.waiting}</em> en attente`);
+  return parts.join(' · ');
+}
+function daysAgoLabel(ts){
+  const d = Math.round((startOfToday()-startOfDay(ts))/86400000);
+  if(d<=0) return "aujourd'hui";
+  if(d===1) return 'hier';
+  return `il y a ${d} jours`;
+}
+
 function shouldShowWeeklyReview(){
   if(new Date().getDay()!==1) return false;
   return state.settings.reviewDismissedDate !== new Date().toDateString();
@@ -1195,7 +1446,18 @@ function renderTimerWeek(){
   `;
 }
 
+function updateTimerDay(){
+  const val = document.getElementById('timer-day-val');
+  if(!val) return;
+  const worked = todayWorked().total;
+  const target = dailyTargetMs();
+  val.textContent = `${fmtDuration(worked)} / ${state.settings.dailyTargetHours} h`;
+  const fill = document.getElementById('timer-day-fill');
+  fill.style.width = Math.min(100, worked/target*100) + '%';
+  fill.classList.toggle('reached', worked>=target);
+}
 function updateTimerLive(){
+  updateTimerDay();
   const live = document.getElementById('timer-live');
   const mBtn = document.getElementById('timer-meeting');
   const pBtn = document.getElementById('timer-progress');
@@ -1215,10 +1477,11 @@ function updateTimerLive(){
     live.classList.remove('active');
   }
 }
+/* Le chrono de la barre du haut est visible depuis toutes les vues : il se
+   rafraîchit en permanence, contrairement au bloc du tableau de bord. */
 setInterval(()=>{
-  if(state.view.type==='dashboard' && !document.getElementById('search').value.trim()){
-    updateTimerLive();
-  }
+  updateTimerBar();
+  if(renderedViewKey==='dashboard') updateTimerLive();
 }, 1000);
 
 function updateClock(){
@@ -1226,9 +1489,10 @@ function updateClock(){
   if(!el) return;
   el.textContent = new Date().toLocaleTimeString('fr-FR', {hour:'2-digit', minute:'2-digit'});
 }
-setInterval(()=>{ if(state.view.type==='dashboard' && !document.getElementById('search').value.trim()) updateClock(); }, 15000);
+setInterval(()=>{ if(renderedViewKey==='dashboard') updateClock(); }, 15000);
 
 function renderProject(main, p){
+  if(renderedViewKey!==viewKey()) notesExpanded = false;
   const pending = p.tasks.filter(t=>!t.done && !t.cancelled);
   const done = p.tasks.filter(t=>t.done);
   const cancelled = p.tasks.filter(t=>t.cancelled);
@@ -1245,6 +1509,7 @@ function renderProject(main, p){
   <div class="project-sub">${pending.length} en cours · ${done.length} validées${cancelled.length? ' · '+cancelled.length+' annulées':''}</div>
 
   <textarea class="notes-box" id="notes" placeholder="Notes libres pour ce projet…">${escapeHtml(p.notes||'')}</textarea>
+  <div class="notes-foot"><button class="notes-toggle hidden" id="notes-toggle"></button></div>
 
   <div class="section-title"><span>Nouvelle tâche</span><span class="line"></span></div>
   <div class="add-task-row">
@@ -1282,7 +1547,10 @@ function renderProject(main, p){
     const val = e.target.textContent.trim();
     if(val){ p.name = val; save(); renderSidebar(); }
   };
-  document.getElementById('notes').oninput = (e)=> updateNotes(p.id, e.target.value);
+  const notes = document.getElementById('notes');
+  notes.oninput = (e)=>{ updateNotes(p.id, e.target.value); autoGrowNotes(); };
+  document.getElementById('notes-toggle').onclick = ()=>{ notesExpanded = !notesExpanded; autoGrowNotes(); };
+  autoGrowNotes();
   document.getElementById('btn-archive').onclick = ()=> archiveProject(p.id, !p.archived);
   document.getElementById('btn-delete-proj').onclick = ()=>{
     if(confirm(`Supprimer le projet « ${p.name} » et toutes ses tâches ?`)) deleteProject(p.id);
@@ -1301,6 +1569,24 @@ function renderProject(main, p){
   document.getElementById('btn-add-task').onclick = doAdd;
   input.onkeydown = (e)=>{ if(e.key==='Enter') doAdd(); };
   if(renderedViewKey!==viewKey()) input.focus();
+}
+
+/* La zone de notes épouse son contenu au lieu de le tronquer. Au-delà d'une
+   hauteur confortable elle défile sur elle-même, et un bouton permet de tout
+   déplier d'un coup pour les projets aux notes longues. */
+const NOTES_CAP = 420;
+let notesExpanded = false;
+function autoGrowNotes(){
+  const el = document.getElementById('notes');
+  if(!el) return;
+  el.style.height = 'auto';
+  const full = el.scrollHeight;
+  el.style.height = Math.max(112, notesExpanded ? full : Math.min(full, NOTES_CAP)) + 'px';
+  const btn = document.getElementById('notes-toggle');
+  if(!btn) return;
+  const overflows = full > NOTES_CAP + 4;
+  btn.classList.toggle('hidden', !overflows);
+  btn.textContent = notesExpanded ? 'Replier les notes ▴' : 'Déplier les notes ▾';
 }
 
 function statusLabel(t){
@@ -1552,6 +1838,7 @@ setInterval(checkNotifications, 5*60*1000);
 window.addEventListener('click', function once(){ askNotifPermission(); window.removeEventListener('click', once); });
 
 /* ===================== INIT ===================== */
+bindTimerBar();
 render();
 })();
 </script>
