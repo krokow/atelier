@@ -51,8 +51,27 @@ body{
   overflow:hidden;
 }
 ::selection{ background:var(--amber-dim); color:#111; }
+
+/* Interface applicative, pas document. Par défaut le pointeur reste une
+   flèche et le texte ne se sélectionne pas : un titre, un onglet ou un
+   libellé ne doit jamais donner l'impression qu'on peut écrire dedans.
+   Le curseur de texte et la sélection sont réactivés explicitement, là où
+   ils ont un sens. */
+html, body{
+  cursor:default;
+  -webkit-user-select:none; user-select:none;
+}
 button{ font-family:inherit; cursor:pointer; }
-input, textarea, select{ font-family:inherit; color:inherit; }
+select{ font-family:inherit; color:inherit; cursor:pointer; }
+input, textarea{
+  font-family:inherit; color:inherit; cursor:text;
+  -webkit-user-select:text; user-select:text;
+}
+[contenteditable="true"]{ cursor:text; -webkit-user-select:text; user-select:text; }
+/* Contenu que l'on peut vouloir relire, sélectionner ou copier. */
+.task-text, .notes-box, .focus-text, .stat-sub, .review-stats{
+  -webkit-user-select:text; user-select:text;
+}
 ::-webkit-scrollbar{ width:9px; height:9px; }
 ::-webkit-scrollbar-thumb{ background:var(--border); border-radius:5px; }
 ::-webkit-scrollbar-track{ background:transparent; }
@@ -209,6 +228,7 @@ input, textarea, select{ font-family:inherit; color:inherit; }
 .check{
   width:16px; height:16px; margin-top:2px; border:1.5px solid var(--text-faint); border-radius:3px;
   flex-shrink:0; display:flex; align-items:center; justify-content:center; color:transparent; font-size:11px;
+  cursor:pointer;
 }
 .check:hover{ border-color:var(--amber); }
 .task.done .check{ background:var(--green); border-color:var(--green); color:#0a1a0d; }
@@ -241,7 +261,7 @@ input, textarea, select{ font-family:inherit; color:inherit; }
 .tctrl:hover{ color:var(--text); }
 .tctrl.pinned{ color:var(--amber); opacity:1; }
 .subtasks{ margin-top:6px; display:flex; flex-direction:column; gap:3px; }
-.subtask{ display:flex; align-items:center; gap:7px; font-size:12.5px; color:var(--text-dim); }
+.subtask{ display:flex; align-items:center; gap:7px; font-size:12.5px; color:var(--text-dim); cursor:pointer; }
 .subtask .check{ width:12px; height:12px; }
 .subtask.done{ text-decoration:line-through; color:var(--text-faint); }
 .add-subtask{ background:none; border:none; color:var(--text-faint); font-size:11.5px; padding:2px 0; }
@@ -300,7 +320,7 @@ input, textarea, select{ font-family:inherit; color:inherit; }
 .focus-text{ font-size:14.5px; }
 .focus-meta{ font-size:11.5px; color:var(--text-faint); margin-top:3px; }
 .focus-meta.late{ color:var(--red); }
-.focus-goto{ font-size:11px; color:var(--text-faint); background:var(--panel-2); border:1px solid var(--border); border-radius:var(--radius); padding:3px 8px; align-self:center; margin-left:auto; flex-shrink:0; }
+.focus-goto{ font-size:11px; color:var(--text-faint); background:var(--panel-2); border:1px solid var(--border); border-radius:var(--radius); padding:3px 8px; align-self:center; margin-left:auto; flex-shrink:0; cursor:pointer; }
 .focus-goto:hover{ color:var(--text); border-color:var(--text-dim); }
 
 .chart-wrap{ display:flex; align-items:flex-end; gap:10px; height:120px; padding-top:10px; }
