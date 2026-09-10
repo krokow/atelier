@@ -330,6 +330,13 @@ input, textarea{
 .review-stat-num{ font-size:19px; font-family:var(--serif); }
 .review-stat-label{ font-size:11px; color:var(--text-faint); }
 .review-close{ margin-left:auto; background:none; border:none; color:var(--text-faint); font-size:15px; flex-shrink:0; }
+.review-projects{ margin-top:15px; padding-top:12px; border-top:1px solid var(--border-soft); }
+.review-sub{ font-size:11px; text-transform:uppercase; letter-spacing:.07em; color:var(--text-faint); margin-bottom:9px; }
+.review-proj{ margin-bottom:10px; }
+.review-proj:last-child{ margin-bottom:0; }
+.review-proj-head{ display:flex; align-items:center; gap:8px; font-size:13px; }
+.review-proj-count{ color:var(--text-faint); font-size:11.5px; }
+.review-proj-items{ font-size:12.5px; color:var(--text-dim); margin-top:3px; padding-left:16px; line-height:1.65; }
 .review-close:hover{ color:var(--text); }
 
 /* ---------- TIME TRACKER ---------- */
@@ -1488,6 +1495,17 @@ function renderDashboard(main){
     const doneLastWeek = tasks.filter(t=>t.done && t.completedAt && t.completedAt>=lastWeekStart && t.completedAt<lastWeekEnd).length;
     const carried = tasks.filter(t=>!t.done && !t.cancelled && t.createdAt<lastWeekEnd).length;
     const timeLastWeek = weeklyTimeTotals(lastWeekStart);
+    /* Ce qui a avancé, projet par projet : les tâches validées la semaine
+       écoulée, les projets les plus actifs en premier. */
+    const byProject = state.projects
+      .map(pr=>({
+        project: pr,
+        done: pr.tasks
+          .filter(t=>t.done && t.completedAt && t.completedAt>=lastWeekStart && t.completedAt<lastWeekEnd)
+          .sort((a,b)=>a.completedAt-b.completedAt)
+      }))
+      .filter(x=>x.done.length)
+      .sort((a,b)=>b.done.length-a.done.length);
     html += `
     <div class="review-banner">
       <div style="flex:1">
@@ -1497,6 +1515,19 @@ function renderDashboard(main){
           <div><div class="review-stat-num">${carried}</div><div class="review-stat-label">Reportées à cette semaine</div></div>
           <div><div class="review-stat-num">${fmtDuration(timeLastWeek.meeting)}</div><div class="review-stat-label">Temps en réunion</div></div>
           <div><div class="review-stat-num">${fmtDuration(timeLastWeek.progress)}</div><div class="review-stat-label">Temps d'avancement</div></div>
+        </div>
+        <div class="review-projects">
+          <div class="review-sub">Ce qui a avancé</div>
+          ${byProject.length ? byProject.map(({project, done})=>`
+            <div class="review-proj">
+              <div class="review-proj-head">
+                <span class="dot" style="background:${project.color}"></span>
+                <span>${escapeHtml(project.name)}</span>
+                <span class="review-proj-count">${done.length} validée${done.length>1?'s':''}</span>
+              </div>
+              <div class="review-proj-items">${done.map(t=>escapeHtml(t.text)).join(' · ')}</div>
+            </div>`).join('')
+          : `<div class="review-proj-items" style="padding-left:0">Aucune tâche validée la semaine dernière.</div>`}
         </div>
       </div>
       <button class="review-close" id="review-close" title="Fermer">✕</button>
