@@ -18,6 +18,7 @@
   --amber-dim:#8a6a3a;
   --blue:#6e8fd6;
   --red:#d97070;
+  --red-dim:#b98a8a;
   --green:#7fb88a;
   --track:#232a34;
   --radius:3px;
@@ -37,6 +38,7 @@
   --amber-dim:#c99a5c;
   --blue:#3f5da3;
   --red:#b8453f;
+  --red-dim:#9c6360;
   --green:#3f7a4d;
   --track:#e4e0d6;
 }
@@ -290,6 +292,7 @@ input, textarea{
 .stat-track-fill{ height:100%; background:var(--blue); border-radius:2px; }
 .stat-track-fill.reached{ background:var(--green); }
 .stat.accent-red{ border-left-color:var(--red); }
+.stat.accent-red.calm{ border-left-color:var(--red-dim); }
 .stat.accent-amber{ border-left-color:var(--amber); }
 .stat.accent-green{ border-left-color:var(--green); }
 .stat.accent-blue{ border-left-color:var(--blue); }
@@ -1542,7 +1545,7 @@ function renderDashboard(main){
       ${statusMeter(byStatus, activeCount)}
       <div class="stat-sub">${statusBreakdown(byStatus, activeCount)}</div>
     </div>
-    <div class="stat ${overdue?'accent-red':''}">
+    <div class="stat accent-red ${overdue?'':'calm'}">
       <div class="stat-head"><div class="stat-num" style="color:${overdue?'var(--red)':'inherit'}">${overdue}</div></div>
       <div class="stat-label">En retard</div>
       <div class="stat-sub">${overdue
