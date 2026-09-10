@@ -69,7 +69,7 @@ input, textarea{
 }
 [contenteditable="true"]{ cursor:text; -webkit-user-select:text; user-select:text; }
 /* Contenu que l'on peut vouloir relire, sélectionner ou copier. */
-.task-text, .notes-box, .focus-text, .stat-sub, .review-stats{
+.task-text, .note-body, .note-title-input, .focus-text, .stat-sub, .review-stats{
   -webkit-user-select:text; user-select:text;
 }
 ::-webkit-scrollbar{ width:9px; height:9px; }
@@ -186,21 +186,6 @@ input, textarea{
 }
 .project-sub{ color:var(--text-faint); font-size:12.5px; margin-bottom:18px; }
 .project-actions{ display:flex; gap:6px; margin-left:auto; }
-
-.notes-box{
-  width:100%; min-height:112px; resize:vertical; overflow-y:auto;
-  background:var(--panel); border:1px solid var(--border-soft); border-radius:var(--radius);
-  padding:12px 14px; color:var(--text); font-size:13.5px; line-height:1.6;
-  display:block;
-}
-.notes-box:focus{ outline:none; border-color:var(--border); }
-.notes-box::placeholder{ color:var(--text-faint); }
-.notes-foot{ display:flex; align-items:center; gap:10px; margin:5px 0 26px; min-height:16px; }
-.notes-toggle{
-  background:none; border:none; color:var(--text-faint); font-size:11.5px; padding:0;
-}
-.notes-toggle:hover{ color:var(--blue); }
-.notes-hint{ font-size:11px; color:var(--text-faint); margin-left:auto; }
 
 .section-title{ font-size:11px; text-transform:uppercase; letter-spacing:.08em; color:var(--text-faint); margin:22px 0 10px; display:flex; align-items:center; gap:10px;}
 .section-title .line{ flex:1; height:1px; background:var(--border-soft); }
@@ -409,6 +394,108 @@ input, textarea{
 .swatch{ width:20px; height:20px; border-radius:50%; cursor:pointer; border:2px solid transparent; }
 .swatch.selected{ border-color:var(--text); }
 #file-input{ display:none; }
+
+/* ---------- LIENS DU PROJET ---------- */
+.links-block{ margin-bottom:22px; }
+.links-head{
+  display:flex; align-items:center; gap:8px; cursor:pointer;
+  font-size:11px; text-transform:uppercase; letter-spacing:.08em; color:var(--text-faint);
+  padding:4px 0;
+}
+.links-head:hover{ color:var(--text-dim); }
+.links-head .line{ flex:1; height:1px; background:var(--border-soft); }
+.links-body{ padding-top:8px; }
+.link-add{ display:flex; gap:8px; margin-bottom:8px; }
+.link-add input{
+  flex:1; background:var(--panel); border:1px solid var(--border-soft); border-radius:var(--radius);
+  padding:7px 10px; font-size:13px; color:var(--text);
+}
+.link-add input:focus{ outline:none; border-color:var(--blue); }
+.link-row{
+  display:flex; align-items:center; gap:10px;
+  padding:7px 6px; border-bottom:1px solid var(--border-soft);
+}
+.link-row:hover{ background:var(--panel-2); }
+.link-main{ flex:1; min-width:0; }
+.link-title{
+  font-size:13.5px; color:var(--blue); text-decoration:none;
+  display:inline-block; max-width:100%; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+  vertical-align:bottom; cursor:pointer;
+}
+.link-title:hover{ text-decoration:underline; }
+.link-sub{ font-size:11px; color:var(--text-faint); margin-top:2px; }
+.link-note{ color:var(--text-dim); }
+.link-ctrls{ display:flex; gap:4px; opacity:0; }
+.link-row:hover .link-ctrls{ opacity:1; }
+
+/* ---------- EXPLORATEUR DE NOTES ---------- */
+.notes-panel{
+  background:var(--panel); border:1px solid var(--border); border-radius:var(--radius);
+  width:min(1080px, 94vw); height:min(720px, 86vh);
+  display:grid; grid-template-columns:262px 1fr; overflow:hidden;
+}
+.notes-side{
+  border-right:1px solid var(--border-soft); background:var(--panel-2);
+  display:flex; flex-direction:column; min-height:0;
+}
+.notes-side-head{ padding:12px 12px 10px; border-bottom:1px solid var(--border-soft); }
+.notes-side-title{
+  font-size:11px; text-transform:uppercase; letter-spacing:.08em; color:var(--text-faint);
+  display:flex; justify-content:space-between; align-items:center; margin-bottom:9px;
+}
+.notes-filter{
+  width:100%; background:var(--panel); border:1px solid var(--border-soft); border-radius:var(--radius);
+  padding:6px 9px; font-size:12.5px; color:var(--text); margin-bottom:8px;
+}
+.notes-filter:focus{ outline:none; border-color:var(--blue); }
+.notes-list{ flex:1; overflow-y:auto; padding:6px; min-height:0; }
+.note-row{
+  padding:9px 9px; border-radius:var(--radius); cursor:pointer;
+  border:1px solid transparent; margin-bottom:2px;
+}
+.note-row:hover{ background:var(--panel); }
+.note-row.active{ background:var(--panel); border-color:var(--border); }
+.note-row-title{
+  font-size:13px; color:var(--text); display:flex; align-items:baseline; gap:6px;
+  overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+}
+.note-row-pin{ color:var(--amber); font-size:11px; flex-shrink:0; }
+.note-row-meta{ font-size:10.5px; color:var(--text-faint); margin-top:3px; }
+.note-row-excerpt{
+  font-size:11.5px; color:var(--text-dim); margin-top:4px;
+  overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+}
+.notes-editor{ display:flex; flex-direction:column; min-width:0; min-height:0; }
+.notes-editor-head{ padding:14px 18px 10px; border-bottom:1px solid var(--border-soft); }
+.note-title-input{
+  width:100%; background:transparent; border:none; padding:0;
+  font-family:var(--serif); font-size:20px; color:var(--text);
+}
+.note-title-input:focus{ outline:none; }
+.note-meta{ font-size:11.5px; color:var(--text-faint); margin-top:5px; display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+.note-saved{ color:var(--green); }
+.note-body{
+  flex:1; width:100%; resize:none; border:none; background:transparent;
+  padding:16px 18px; font-size:14px; line-height:1.7; color:var(--text);
+  font-family:var(--sans); min-height:0;
+}
+.note-body:focus{ outline:none; }
+.notes-toolbar{
+  display:flex; align-items:center; gap:8px; flex-wrap:wrap;
+  padding:9px 14px; border-top:1px solid var(--border-soft); background:var(--panel-2);
+}
+.notes-toolbar .hint{ font-size:11px; color:var(--text-faint); margin-left:auto; }
+.notes-empty{
+  flex:1; display:flex; align-items:center; justify-content:center; text-align:center;
+  color:var(--text-faint); font-size:13px; padding:30px;
+}
+.notes-back{ display:none; }
+@media (max-width:820px){
+  .notes-panel{ grid-template-columns:1fr; width:96vw; height:90vh; }
+  .notes-panel.on-note .notes-side{ display:none; }
+  .notes-panel:not(.on-note) .notes-editor{ display:none; }
+  .notes-back{ display:inline-block; }
+}
 kbd{ background:var(--panel-2); border:1px solid var(--border); border-radius:3px; padding:0 5px; font-size:11px; color:var(--text-dim); }
 .help-list{ font-size:12.5px; color:var(--text-dim); line-height:2; }
 
@@ -537,8 +624,10 @@ kbd{ background:var(--panel-2); border:1px solid var(--border); border-radius:3p
 const STORAGE_KEY = 'atelier_organiser_v1';
 const COLORS = ['#e0a458','#6e8fd6','#7fb88a','#d97070','#b48fd6','#5fb3b3','#c9a15a','#8fa8d6'];
 
+const SCHEMA_VERSION = 2;
 function defaultState(){
   return {
+    schemaVersion: SCHEMA_VERSION,
     projects: [],
     trash: [],
     inbox: [],
@@ -568,15 +657,21 @@ function normalizeState(s){
   if(['meeting','progress'].indexOf(s.timeTracking.lastMode)<0) s.timeTracking.lastMode = null;
   if(!s.notified || typeof s.notified!=='object') s.notified = {};
   if(!s.view || typeof s.view!=='object' || !s.view.type) s.view = d.view;
+  s.schemaVersion = SCHEMA_VERSION;
   s.projects.forEach(p=>{
     if(!p.id) p.id = uid();
     if(typeof p.name!=='string') p.name = 'Projet sans nom';
     if(typeof p.color!=='string') p.color = COLORS[0];
-    if(typeof p.notes!=='string') p.notes = '';
     if(typeof p.createdAt!=='number') p.createdAt = now();
     p.archived = !!p.archived;
     if(!Array.isArray(p.tasks)) p.tasks = [];
     p.tasks.forEach(normalizeTask);
+    if(!Array.isArray(p.docs)) p.docs = [];
+    p.docs.forEach(normalizeDoc);
+    if(!Array.isArray(p.links)) p.links = [];
+    p.links = p.links.filter(l=>l && typeof l.url==='string' && l.url.trim());
+    p.links.forEach(normalizeLink);
+    p.linksOpen = p.linksOpen===undefined ? true : !!p.linksOpen;
   });
   s.inbox = s.inbox.filter(i=>i && typeof i.text==='string').map(i=>{
     if(!i.id) i.id = uid();
@@ -585,6 +680,36 @@ function normalizeState(s){
   });
   return s;
 }
+function normalizeDoc(d){
+  if(!d.id) d.id = uid();
+  if(typeof d.title!=='string') d.title = 'Sans titre';
+  if(typeof d.body!=='string') d.body = '';
+  d.pinned = !!d.pinned;
+  if(typeof d.createdAt!=='number') d.createdAt = now();
+  if(typeof d.updatedAt!=='number') d.updatedAt = d.createdAt;
+  if(typeof d.meetingMs!=='number') d.meetingMs = null;
+  if(typeof d.meetingStart!=='number') d.meetingStart = null;
+  return d;
+}
+function normalizeLink(l){
+  if(!l.id) l.id = uid();
+  l.url = normalizeUrl(l.url);
+  if(typeof l.title!=='string' || !l.title.trim()) l.title = hostOf(l.url);
+  if(typeof l.note!=='string') l.note = '';
+  if(typeof l.createdAt!=='number') l.createdAt = now();
+  return l;
+}
+/* Une adresse tapée sans protocole reste ouvrable : on complète en https. */
+function normalizeUrl(url){
+  const u = String(url||'').trim();
+  if(!u) return '';
+  return /^[a-z][a-z0-9+.-]*:/i.test(u) ? u : 'https://' + u;
+}
+function hostOf(url){
+  try{ return new URL(url).hostname.replace(/^www\./,''); }
+  catch(e){ return url.replace(/^[a-z]+:\/\//i,'').split('/')[0] || url; }
+}
+
 function normalizeTask(t){
   if(!t.id) t.id = uid();
   if(typeof t.text!=='string') t.text = '';
@@ -622,19 +747,45 @@ function load(){
   }catch(e){ console.error('Chargement impossible', e); return null; }
 }
 let saveTimer=null;
+let saveFailed=false;
 function save(){
   clearTimeout(saveTimer);
   saveTimer = setTimeout(()=>{
-    try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }
-    catch(e){ console.error('Sauvegarde impossible', e); }
+    try{
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+      saveFailed = false;
+    }catch(e){
+      console.error('Sauvegarde impossible', e);
+      /* Le stockage local est plein ou inaccessible. Se taire ferait perdre
+         du travail sans que rien ne l'indique. */
+      if(!saveFailed){
+        saveFailed = true;
+        toast("Sauvegarde impossible : espace de stockage saturé. Exporte tes données maintenant.", 'Exporter', exportData);
+      }
+    }
   }, 150);
+}
+/* La corbeille ne sert qu'à annuler une suppression récente : rien ne la
+   relit ensuite, et au-delà d'une semaine elle ne fait qu'alourdir la
+   sauvegarde. */
+const TRASH_KEEP_MS = 7*86400000;
+function purgeTrash(){
+  const cutoff = now() - TRASH_KEEP_MS;
+  const before = state.trash.length;
+  state.trash = state.trash.filter(t=> typeof t.deletedAt==='number' && t.deletedAt > cutoff);
+  return state.trash.length !== before;
 }
 
 function seedIfEmpty(){
   if(state.projects.length>0) return;
   const p = {
     id: uid(), name:'Premiers pas', color: COLORS[0], archived:false, createdAt: now(),
-    notes: "Bienvenue. Ceci est ta zone de notes libres pour ce projet — elle se sauvegarde automatiquement.\n\nCoche une tâche ci-dessous pour voir comment fonctionne la validation.",
+    links: [], linksOpen: true,
+    docs: [{
+      id: uid(), title: 'Comment marchent les notes', pinned:false,
+      createdAt: now(), updatedAt: now(), meetingMs:null, meetingStart:null,
+      body: "Chaque projet a ses propres notes, ouvertes par le bouton Notes ou par la touche d.\n\nLe texte s'enregistre au fur et à mesure, il n'y a rien à valider.\n\nSélectionne une ligne et fais Ctrl+Entrée : elle devient une tâche du projet, sans que cette note soit modifiée."
+    }],
     tasks: [
       {id:uid(), text:'Épingler une tâche importante (icône étoile au survol)', done:false, cancelled:false, pinned:true, priority:'medium', status:'todo', waitingOn:'', due:null, tags:['exemple'], subtasks:[], recurring:null, createdAt:now(), completedAt:null},
       {id:uid(), text:'Explorer le tableau de bord', done:false, cancelled:false, pinned:false, priority:'low', status:'todo', waitingOn:'', due:null, tags:[], subtasks:[], recurring:null, createdAt:now(), completedAt:null},
@@ -722,6 +873,7 @@ function deleteProject(id){
   if(idx<0) return;
   const [removed] = state.projects.splice(idx,1);
   state.trash.push({type:'project', data:removed, deletedAt:now()});
+  purgeTrash();
   if(state.view.projectId===id) state.view = {type:'dashboard'};
   save(); render();
   toast('Projet supprimé.', 'Annuler', ()=>{
@@ -775,6 +927,7 @@ function deleteTask(projectId, taskId){
   const idx = p.tasks.findIndex(t=>t.id===taskId); if(idx<0) return;
   const [removed] = p.tasks.splice(idx,1);
   state.trash.push({type:'task', data:removed, projectId, deletedAt:now()});
+  purgeTrash();
   save(); render();
   toast('Tâche supprimée.', 'Annuler', ()=>{
     const pr = getProject(projectId);
@@ -808,12 +961,6 @@ function toggleSubtask(projectId, taskId, subId){
   s.done = !s.done;
   save(); render();
 }
-function updateNotes(projectId, text){
-  const p = getProject(projectId); if(!p) return;
-  p.notes = text;
-  save();
-}
-
 /* ---- Inbox rapide ---- */
 function addInboxItem(text){
   if(!text || !text.trim()) return;
@@ -870,10 +1017,12 @@ function stopTimer(){
   const tt = state.timeTracking;
   if(!tt.current) return;
   const mode = tt.current.mode;
+  const start = tt.current.start;
   tt.lastMode = mode;
-  forEachDaySlice(tt.current.start, now(), (dayStart, ms)=>{
+  forEachDaySlice(start, now(), (dayStart, ms)=>{
     if(ms>2000) tt.entries.push({id:uid(), date:dayStart, mode, ms});
   });
+  linkMeetingToDoc(mode, start, now());
   tt.current = null;
   save(); render();
 }
@@ -988,6 +1137,7 @@ function render(){
   renderMain();
   renderRightPanel();
   updateTimerBar();
+  if(notesUI) renderNotesList();
   renderedViewKey = viewKey();
   if(main && renderedViewKey===keyBefore) main.scrollTop = scrollBefore;
   if(focusAfterRender){
@@ -1104,12 +1254,42 @@ function renderSearch(main, q){
   const term = q.replace(/^#/, '');
   if(!term){ main.innerHTML = `<div class="empty-state">Tape quelque chose à chercher.</div>`; return; }
   const results = allTasks().filter(t=> t.text.toLowerCase().includes(term) || (t.tags||[]).some(tag=>tag.toLowerCase().includes(term)));
-  let html = `<div class="section-title"><span>Résultats pour « ${escapeHtml(q)} »</span><span class="line"></span></div><div class="task-list">`;
-  if(results.length===0) html += `<div class="empty-state">Aucun résultat.</div>`;
+  const notes = [];
+  state.projects.forEach(pr=>pr.docs.forEach(d=>{
+    if(d.title.toLowerCase().includes(term) || d.body.toLowerCase().includes(term)){
+      notes.push({doc:d, project:pr});
+    }
+  }));
+
+  let html = `<div class="section-title"><span>Tâches (${results.length})</span><span class="line"></span></div><div class="task-list">`;
+  if(results.length===0) html += `<div class="empty-state" style="padding-top:10px">Aucune tâche pour « ${escapeHtml(q)} ».</div>`;
   results.forEach(t=>{ html += taskRow(t.projectId, t, true); });
   html += `</div>`;
+
+  html += `<div class="section-title" style="margin-top:26px"><span>Notes (${notes.length})</span><span class="line"></span></div>`;
+  if(notes.length===0){
+    html += `<div class="empty-state" style="padding-top:10px">Aucune note pour « ${escapeHtml(q)} ».</div>`;
+  } else {
+    html += notes.map(({doc,project})=>`
+      <div class="link-row" data-opendoc="${doc.id}" data-openproj="${project.id}" style="cursor:pointer">
+        <div class="link-main">
+          <div class="rp-task-text">${escapeHtml(doc.title)}</div>
+          <div class="link-sub">${escapeHtml(project.name)} · ${escapeHtml(fmtRelative(doc.updatedAt))} · ${escapeHtml(searchExcerpt(doc.body, term))}</div>
+        </div>
+      </div>`).join('');
+  }
   main.innerHTML = html;
   bindTaskEvents(main);
+  main.querySelectorAll('[data-opendoc]').forEach(el=>{
+    el.onclick = ()=> openNotes(el.dataset.openproj, el.dataset.opendoc);
+  });
+}
+/* Extrait la portion de note qui contient le terme cherché. */
+function searchExcerpt(body, term){
+  const i = body.toLowerCase().indexOf(term);
+  if(i<0) return excerpt(body);
+  const from = Math.max(0, i-30);
+  return (from>0?'…':'') + body.slice(from, i+term.length+50).replace(/\s+/g,' ').trim() + '…';
 }
 
 function renderInbox(main){
@@ -1540,7 +1720,6 @@ function updateClock(){
 setInterval(()=>{ if(renderedViewKey==='dashboard') updateClock(); }, 15000);
 
 function renderProject(main, p){
-  if(renderedViewKey!==viewKey()) notesExpanded = false;
   const pending = p.tasks.filter(t=>!t.done && !t.cancelled);
   const done = p.tasks.filter(t=>t.done);
   const cancelled = p.tasks.filter(t=>t.cancelled);
@@ -1549,6 +1728,7 @@ function renderProject(main, p){
     <span class="dot" style="background:${p.color}; width:12px; height:12px;"></span>
     <div class="project-title" id="proj-title" title="Double-cliquer pour renommer">${escapeHtml(p.name)}</div>
     <div class="project-actions">
+      <button class="btn primary" id="btn-notes">Notes${p.docs.length? ' ('+p.docs.length+')':''}</button>
       <button class="btn" id="btn-color">Couleur</button>
       <button class="btn" id="btn-archive">${p.archived?'Désarchiver':'Archiver'}</button>
       <button class="btn" id="btn-delete-proj">Supprimer</button>
@@ -1556,8 +1736,14 @@ function renderProject(main, p){
   </div>
   <div class="project-sub">${pending.length} en cours · ${done.length} validées${cancelled.length? ' · '+cancelled.length+' annulées':''}</div>
 
-  <textarea class="notes-box" id="notes" placeholder="Notes libres pour ce projet…">${escapeHtml(p.notes||'')}</textarea>
-  <div class="notes-foot"><button class="notes-toggle hidden" id="notes-toggle"></button></div>
+  <div class="links-block">
+    <div class="links-head" id="links-head">
+      <span>Liens${p.links.length? ' ('+p.links.length+')':''}</span>
+      <span>${p.linksOpen?'▾':'▸'}</span>
+      <span class="line"></span>
+    </div>
+    <div class="links-body ${p.linksOpen?'':'hidden'}" id="links-body"></div>
+  </div>
 
   <div class="section-title"><span>Nouvelle tâche</span><span class="line"></span></div>
   <div class="add-task-row">
@@ -1600,10 +1786,11 @@ function renderProject(main, p){
     if(val!==p.name){ p.name = val; save(); renderSidebar(); }
   };
   titleEl.onkeydown = editKeys(titleEl, ()=> p.name);
-  const notes = document.getElementById('notes');
-  notes.oninput = (e)=>{ updateNotes(p.id, e.target.value); autoGrowNotes(); };
-  document.getElementById('notes-toggle').onclick = ()=>{ notesExpanded = !notesExpanded; autoGrowNotes(); };
-  autoGrowNotes();
+  document.getElementById('btn-notes').onclick = ()=> openNotes(p.id);
+  document.getElementById('links-head').onclick = ()=>{
+    p.linksOpen = !p.linksOpen; save(); render();
+  };
+  renderLinks(p);
   document.getElementById('btn-archive').onclick = ()=> archiveProject(p.id, !p.archived);
   document.getElementById('btn-delete-proj').onclick = ()=>{
     if(confirm(`Supprimer le projet « ${p.name} » et toutes ses tâches ?`)) deleteProject(p.id);
@@ -1624,22 +1811,69 @@ function renderProject(main, p){
   input.onkeydown = (e)=>{ if(e.key==='Enter') doAdd(); };
 }
 
-/* La zone de notes épouse son contenu au lieu de le tronquer. Au-delà d'une
-   hauteur confortable elle défile sur elle-même, et un bouton permet de tout
-   déplier d'un coup pour les projets aux notes longues. */
-const NOTES_CAP = 420;
-let notesExpanded = false;
-function autoGrowNotes(){
-  const el = document.getElementById('notes');
-  if(!el) return;
-  el.style.height = 'auto';
-  const full = el.scrollHeight;
-  el.style.height = Math.max(112, notesExpanded ? full : Math.min(full, NOTES_CAP)) + 'px';
-  const btn = document.getElementById('notes-toggle');
-  if(!btn) return;
-  const overflows = full > NOTES_CAP + 4;
-  btn.classList.toggle('hidden', !overflows);
-  btn.textContent = notesExpanded ? 'Replier les notes ▴' : 'Déplier les notes ▾';
+function renderLinks(project){
+  const host = document.getElementById('links-body');
+  if(!host) return;
+  host.innerHTML = `
+    <div class="link-add">
+      <input type="text" id="link-url" placeholder="Coller une adresse… puis Entrée">
+      <button class="btn" id="link-add-btn">Ajouter</button>
+    </div>
+    <div id="link-list"></div>`;
+  const list = host.querySelector('#link-list');
+  if(project.links.length===0){
+    list.innerHTML = `<div class="rp-empty">Aucun lien pour ce projet.</div>`;
+  } else {
+    list.innerHTML = project.links.map(l=>`
+      <div class="link-row" data-link="${l.id}">
+        <div class="link-main">
+          <a class="link-title" href="${escapeHtml(l.url)}" target="_blank" rel="noopener noreferrer">${escapeHtml(l.title)}</a>
+          <div class="link-sub">${escapeHtml(hostOf(l.url))}${l.note? ' · <span class="link-note">'+escapeHtml(l.note)+'</span>':''}</div>
+        </div>
+        <div class="link-ctrls">
+          <button class="tctrl" data-rename="${l.id}" title="Renommer">✎</button>
+          <button class="tctrl" data-note="${l.id}" title="Ajouter une précision">≡</button>
+          <button class="tctrl" data-del="${l.id}" title="Supprimer">✕</button>
+        </div>
+      </div>`).join('');
+    /* Le lien reste un vrai lien : le nouvel onglet est isolé du nôtre. */
+    list.querySelectorAll('.link-sub').forEach(el=>{
+      el.title = 'Ouvre dans un nouvel onglet';
+    });
+    list.querySelectorAll('[data-rename]').forEach(b=> b.onclick = ()=>{
+      const l = project.links.find(x=>x.id===b.dataset.rename); if(!l) return;
+      const val = prompt('Nom du lien :', l.title);
+      if(val===null) return;
+      l.title = val.trim() || hostOf(l.url);
+      save(); renderLinks(project);
+    });
+    list.querySelectorAll('[data-note]').forEach(b=> b.onclick = ()=>{
+      const l = project.links.find(x=>x.id===b.dataset.note); if(!l) return;
+      const val = prompt('Précision (qui l\'a partagé, à quoi il sert…) :', l.note);
+      if(val===null) return;
+      l.note = val.trim();
+      save(); renderLinks(project);
+    });
+    list.querySelectorAll('[data-del]').forEach(b=> b.onclick = ()=>{
+      const idx = project.links.findIndex(x=>x.id===b.dataset.del);
+      if(idx<0) return;
+      const [removed] = project.links.splice(idx,1);
+      save(); render();
+      toast('Lien supprimé.', 'Annuler', ()=>{
+        project.links.splice(Math.min(idx, project.links.length), 0, removed);
+        save(); render();
+      });
+    });
+  }
+  const input = host.querySelector('#link-url');
+  const add = ()=>{
+    const url = normalizeUrl(input.value);
+    if(!url) return;
+    project.links.unshift(normalizeLink({id:uid(), url, title:'', note:'', createdAt:now()}));
+    save(); render();
+  };
+  host.querySelector('#link-add-btn').onclick = add;
+  input.onkeydown = (e)=>{ if(e.key==='Enter') add(); };
 }
 
 function statusLabel(t){
@@ -1793,6 +2027,233 @@ function bindTaskEvents(scope){
   });
 }
 
+/* ===================== NOTES DU PROJET ===================== */
+/* L'explorateur s'ouvre en surimpression, en une seule couche : la liste à
+   gauche, l'éditeur à droite. Passer d'une note à l'autre reste un clic.
+   Son état vit ici et non dans les données sauvegardées : rouvrir
+   l'application ne doit pas rouvrir un panneau. */
+let notesUI = null;
+
+function sortedDocs(project, filter){
+  const q = (filter||'').trim().toLowerCase();
+  return project.docs
+    .filter(d=> !q || d.title.toLowerCase().includes(q) || d.body.toLowerCase().includes(q))
+    .sort((a,b)=> (b.pinned?1:0)-(a.pinned?1:0) || b.updatedAt-a.updatedAt);
+}
+function fmtRelative(ts){
+  const mins = Math.round((now()-ts)/60000);
+  if(mins<1) return "à l'instant";
+  if(mins<60) return `il y a ${mins} min`;
+  const days = Math.round((startOfToday()-startOfDay(ts))/86400000);
+  if(days===0) return `à ${new Date(ts).toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'})}`;
+  if(days===1) return 'hier';
+  if(days<7) return `il y a ${days} jours`;
+  return fmtDate(ts);
+}
+function excerpt(body){
+  const line = body.split('\n').find(l=>l.trim());
+  return line ? line.trim().slice(0,80) : 'Note vide';
+}
+function defaultDocTitle(){
+  const cur = state.timeTracking.current;
+  if(cur && cur.mode==='meeting'){
+    return 'Réunion du ' + new Date().toLocaleDateString('fr-FR',{day:'numeric', month:'long'});
+  }
+  return 'Note du ' + new Date().toLocaleDateString('fr-FR',{day:'numeric', month:'long'});
+}
+function addDoc(project){
+  const cur = state.timeTracking.current;
+  const d = normalizeDoc({
+    id: uid(), title: defaultDocTitle(), body:'',
+    createdAt: now(), updatedAt: now(),
+    meetingStart: (cur && cur.mode==='meeting') ? cur.start : null
+  });
+  project.docs.unshift(d);
+  save();
+  return d;
+}
+function deleteDoc(project, docId){
+  const idx = project.docs.findIndex(d=>d.id===docId);
+  if(idx<0) return;
+  const [removed] = project.docs.splice(idx,1);
+  state.trash.push({type:'doc', data:removed, projectId:project.id, deletedAt:now()});
+  purgeTrash();
+  if(notesUI && notesUI.docId===docId) notesUI.docId = (project.docs[0]||{}).id || null;
+  save(); renderNotes(); renderSidebar();
+  toast('Note supprimée.', 'Annuler', ()=>{
+    project.docs.splice(Math.min(idx, project.docs.length), 0, removed);
+    state.trash = state.trash.filter(x=>!(x.type==='doc' && x.data.id===removed.id));
+    if(notesUI) notesUI.docId = removed.id;
+    save(); renderNotes(); renderSidebar();
+  });
+}
+/* À l'arrêt d'un chrono Réunion, la note ouverte pendant cette séquence
+   reçoit sa durée. */
+function linkMeetingToDoc(mode, start, end){
+  if(mode!=='meeting') return;
+  state.projects.forEach(p=>p.docs.forEach(d=>{
+    if(d.meetingStart===start) d.meetingMs = end - start;
+  }));
+}
+
+function openNotes(projectId, docId){
+  const project = getProject(projectId);
+  if(!project) return;
+  closeNotes();
+  const docs = sortedDocs(project, '');
+  notesUI = {
+    projectId,
+    docId: docId || (docs[0] ? docs[0].id : null),
+    filter: '',
+    onNote: !!docId
+  };
+  const bg = document.createElement('div');
+  bg.className = 'modal-bg';
+  bg.id = 'notes-overlay';
+  bg.innerHTML = `
+    <div class="notes-panel">
+      <div class="notes-side">
+        <div class="notes-side-head">
+          <div class="notes-side-title"><span>Notes · ${escapeHtml(project.name)}</span></div>
+          <input type="text" class="notes-filter" id="notes-filter" placeholder="Filtrer…">
+          <button class="btn primary" id="notes-new" style="width:100%">＋ Nouvelle note</button>
+        </div>
+        <div class="notes-list" id="notes-list"></div>
+      </div>
+      <div class="notes-editor" id="notes-editor"></div>
+    </div>`;
+  document.body.appendChild(bg);
+  bg.onclick = (e)=>{ if(e.target===bg) closeNotes(); };
+  bg.querySelector('#notes-new').onclick = ()=>{
+    const d = addDoc(project);
+    notesUI.docId = d.id; notesUI.onNote = true; notesUI.filter='';
+    const f = document.getElementById('notes-filter'); if(f) f.value='';
+    renderNotes(); renderSidebar();
+    const t = document.getElementById('note-title');
+    if(t){ t.focus(); t.select(); }
+  };
+  const filter = bg.querySelector('#notes-filter');
+  filter.oninput = ()=>{ notesUI.filter = filter.value; renderNotesList(); };
+  renderNotes();
+}
+function closeNotes(){
+  const el = document.getElementById('notes-overlay');
+  if(el) el.remove();
+  notesUI = null;
+}
+function renderNotes(){ renderNotesList(); renderNotesEditor(); }
+
+function renderNotesList(){
+  if(!notesUI) return;
+  const project = getProject(notesUI.projectId);
+  const list = document.getElementById('notes-list');
+  if(!project || !list) return;
+  const panel = document.querySelector('.notes-panel');
+  if(panel) panel.classList.toggle('on-note', notesUI.onNote);
+  const docs = sortedDocs(project, notesUI.filter);
+  if(docs.length===0){
+    list.innerHTML = `<div class="rp-empty">${notesUI.filter? 'Aucune note ne correspond.' : 'Aucune note pour ce projet.'}</div>`;
+    return;
+  }
+  list.innerHTML = docs.map(d=>`
+    <div class="note-row ${d.id===notesUI.docId?'active':''}" data-doc="${d.id}">
+      <div class="note-row-title">${d.pinned?'<span class="note-row-pin">★</span>':''}<span class="note-row-name">${escapeHtml(d.title)}</span></div>
+      <div class="note-row-meta">${escapeHtml(fmtRelative(d.updatedAt))}${d.meetingMs?' · '+fmtDuration(d.meetingMs):''}</div>
+      <div class="note-row-excerpt">${escapeHtml(excerpt(d.body))}</div>
+    </div>`).join('');
+  list.querySelectorAll('[data-doc]').forEach(el=>{
+    el.onclick = ()=>{ notesUI.docId = el.dataset.doc; notesUI.onNote = true; renderNotes(); };
+  });
+}
+
+function renderNotesEditor(){
+  if(!notesUI) return;
+  const project = getProject(notesUI.projectId);
+  const host = document.getElementById('notes-editor');
+  if(!project || !host) return;
+  const doc = project.docs.find(d=>d.id===notesUI.docId);
+  if(!doc){
+    host.innerHTML = `<div class="notes-empty">Choisis une note à gauche, ou crée-en une nouvelle.</div>`;
+    return;
+  }
+  host.innerHTML = `
+    <div class="notes-editor-head">
+      <button class="btn notes-back" id="note-back" style="margin-bottom:8px">‹ Toutes les notes</button>
+      <input type="text" class="note-title-input" id="note-title" value="${escapeHtml(doc.title)}" placeholder="Titre de la note">
+      <div class="note-meta">
+        <span id="note-status">Modifiée ${escapeHtml(fmtRelative(doc.updatedAt))}</span>
+        ${doc.meetingMs? `<span>· Réunion de ${fmtDuration(doc.meetingMs)}</span>`:''}
+      </div>
+    </div>
+    <textarea class="note-body" id="note-body" placeholder="Écris ici. Tout est enregistré au fur et à mesure.">${escapeHtml(doc.body)}</textarea>
+    <div class="notes-toolbar">
+      <button class="btn" id="note-task">Faire une tâche de la sélection</button>
+      <button class="btn" id="note-pin">${doc.pinned?'Désépingler':'Épingler'}</button>
+      <button class="btn" id="note-export">Exporter en .txt</button>
+      <button class="btn" id="note-delete">Supprimer</button>
+      <span class="hint"><kbd>Ctrl</kbd>+<kbd>Entrée</kbd> crée une tâche · <kbd>Échap</kbd> ferme</span>
+    </div>`;
+
+  const title = document.getElementById('note-title');
+  const body  = document.getElementById('note-body');
+  const status= document.getElementById('note-status');
+  const touch = ()=>{
+    doc.updatedAt = now();
+    save();
+    status.textContent = 'Enregistrée à l\'instant';
+    status.className = 'note-saved';
+    clearTimeout(renderNotesEditor._t);
+    renderNotesEditor._t = setTimeout(()=>{
+      const row = document.querySelector(`.note-row[data-doc="${doc.id}"]`);
+      if(row){
+        const t = row.querySelector('.note-row-name');
+        const m = row.querySelector('.note-row-meta');
+        const e = row.querySelector('.note-row-excerpt');
+        if(t) t.textContent = doc.title;
+        if(m) m.textContent = fmtRelative(doc.updatedAt) + (doc.meetingMs? ' · '+fmtDuration(doc.meetingMs) : '');
+        if(e) e.textContent = excerpt(doc.body);
+      }
+    }, 600);
+  };
+  title.oninput = ()=>{ doc.title = title.value || 'Sans titre'; touch(); };
+  body.oninput  = ()=>{ doc.body = body.value; touch(); };
+
+  const back = document.getElementById('note-back');
+  back.onclick = ()=>{ notesUI.onNote = false; renderNotesList(); };
+
+  document.getElementById('note-pin').onclick = ()=>{
+    doc.pinned = !doc.pinned;
+    save(); renderNotes();
+  };
+  document.getElementById('note-export').onclick = ()=>{
+    const safe = (doc.title||'note').replace(/[^\p{L}\p{N} _-]/gu,'').trim().slice(0,60) || 'note';
+    downloadFile(doc.title + '\n\n' + doc.body, safe + '.txt', 'text/plain;charset=utf-8');
+  };
+  document.getElementById('note-delete').onclick = ()=>{
+    if(confirm(`Supprimer la note « ${doc.title} » ?`)) deleteDoc(project, doc.id);
+  };
+  document.getElementById('note-task').onclick = ()=> taskFromSelection(project, body);
+  body.onkeydown = (e)=>{
+    if(e.key==='Enter' && (e.ctrlKey||e.metaKey)){ e.preventDefault(); taskFromSelection(project, body); }
+  };
+}
+
+/* Transforme la sélection en tâche, ou à défaut la ligne où se trouve le
+   curseur. Le texte de la note n'est pas modifié. */
+function taskFromSelection(project, body){
+  let text = body.value.slice(body.selectionStart, body.selectionEnd).trim();
+  if(!text){
+    const start = body.value.lastIndexOf('\n', Math.max(0, body.selectionStart-1)) + 1;
+    let end = body.value.indexOf('\n', body.selectionStart);
+    if(end<0) end = body.value.length;
+    text = body.value.slice(start, end).trim();
+  }
+  text = text.replace(/^[-*•\s\[\]xX]+/,'').trim();
+  if(!text){ toast('Rien à transformer : place le curseur sur une ligne de texte.'); return; }
+  addTask(project.id, text.slice(0,300), {});
+  toast('Tâche créée : ' + text.slice(0,60));
+}
+
 function openColorPicker(p, anchor){
   const bg = document.createElement('div');
   bg.className='modal-bg';
@@ -1817,16 +2278,20 @@ document.getElementById('btn-theme').onclick = ()=>{
 };
 document.getElementById('btn-capture').onclick = openCaptureModal;
 
-document.getElementById('btn-export').onclick = ()=>{
-  const blob = new Blob([JSON.stringify(state, null, 2)], {type:'application/json'});
+function downloadFile(content, filename, mime){
+  const blob = new Blob([content], {type:mime});
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
-  const d = new Date().toISOString().slice(0,10);
-  a.href = url; a.download = `atelier-sauvegarde-${d}.json`;
+  a.href = url; a.download = filename;
   a.click();
   URL.revokeObjectURL(url);
+}
+function exportData(){
+  const d = new Date().toISOString().slice(0,10);
+  downloadFile(JSON.stringify(state, null, 2), `atelier-sauvegarde-${d}.json`, 'application/json');
   toast('Export terminé.');
-};
+}
+document.getElementById('btn-export').onclick = exportData;
 document.getElementById('btn-import').onclick = ()=> document.getElementById('file-input').click();
 document.getElementById('file-input').onchange = (e)=>{
   const file = e.target.files[0]; if(!file) return;
@@ -1838,6 +2303,7 @@ document.getElementById('file-input').onchange = (e)=>{
       const replace = confirm('Remplacer toutes les données actuelles par ce fichier ?\nAnnuler = fusionner les projets importés avec les actuels.');
       if(replace){
         state = imported;
+        purgeTrash();
       } else {
         imported.projects.forEach(p=>{ p.id = uid(); p.tasks.forEach(t=>{ t.id = uid(); }); state.projects.push(p); });
       }
@@ -1861,6 +2327,7 @@ document.getElementById('btn-help').onclick = ()=>{
       <div><kbd>n</kbd> Écrire une nouvelle tâche (projet ou boîte de réception)</div>
       <div><kbd>p</kbd> Nouveau projet</div>
       <div><kbd>i</kbd> Capture rapide (inbox)</div>
+      <div><kbd>d</kbd> Notes du projet ouvert</div>
       <div><kbd>Échap</kbd> Fermer / annuler / désélectionner</div>
       <div style="margin-top:10px">Double-clic sur le texte d'une tâche ou sur le nom d'un projet pour le modifier, <kbd>Entrée</kbd> pour valider.</div>
     </div>
@@ -1916,6 +2383,10 @@ document.addEventListener('keydown', (e)=>{
     e.preventDefault();
     openCaptureModal();
   }
+  else if(e.key==='d' && !editing && state.view.type==='project' && !notesUI){
+    e.preventDefault();
+    openNotes(state.view.projectId);
+  }
 });
 
 /* ===================== NOTIFICATIONS ===================== */
@@ -1941,6 +2412,7 @@ setInterval(checkNotifications, 5*60*1000);
 window.addEventListener('click', function once(){ askNotifPermission(); window.removeEventListener('click', once); });
 
 /* ===================== INIT ===================== */
+if(purgeTrash()) save();
 bindTimerBar();
 render();
 })();
