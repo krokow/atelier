@@ -324,23 +324,9 @@ input, textarea{
 .donut-sub{ font-size:10.5px; color:var(--text-faint); }
 
 /* ---------- WEEKLY REVIEW BANNER ---------- */
-.review-banner{ background:var(--panel-2); border:1px solid var(--amber-dim); border-left:3px solid var(--amber); border-radius:var(--radius); padding:16px 18px; margin-bottom:28px; }
-.review-head{ display:flex; align-items:baseline; gap:12px; margin-bottom:10px; }
-.review-title{ font-family:var(--serif); font-size:16.5px; }
-.review-range{ font-size:12px; color:var(--text-faint); }
-.review-actions{ margin-left:auto; display:flex; align-items:center; gap:6px; flex-shrink:0; }
+.review-banner{ display:flex; align-items:flex-start; gap:18px; background:var(--panel-2); border:1px solid var(--amber-dim); border-left:3px solid var(--amber); border-radius:var(--radius); padding:16px 18px; margin-bottom:28px; }
+.review-title{ font-family:var(--serif); font-size:16.5px; margin-bottom:8px; }
 .review-stats{ display:flex; gap:26px; flex-wrap:wrap; }
-/* Le détail par projet : ce sur quoi la semaine est passée, pas seulement
-   combien. C'est cette partie qui se partage avec l'équipe. */
-.review-detail{ margin-top:16px; padding-top:14px; border-top:1px solid var(--border-soft); }
-.review-proj{ margin-bottom:12px; }
-.review-proj:last-child{ margin-bottom:0; }
-.review-proj-head{ display:flex; align-items:center; gap:8px; font-size:13px; }
-.review-proj-count{ color:var(--text-faint); font-size:11.5px; }
-.review-proj-items{ font-size:12.5px; color:var(--text-dim); margin-top:4px; padding-left:16px; line-height:1.7; }
-.review-sub{ font-size:11px; text-transform:uppercase; letter-spacing:.07em; color:var(--text-faint); margin-bottom:8px; }
-.review-none{ font-size:12.5px; color:var(--text-faint); }
-.review-tag{ font-size:10.5px; text-transform:uppercase; letter-spacing:.06em; color:var(--amber); }
 .review-stat-num{ font-size:19px; font-family:var(--serif); }
 .review-stat-label{ font-size:11px; color:var(--text-faint); }
 .review-close{ margin-left:auto; background:none; border:none; color:var(--text-faint); font-size:15px; flex-shrink:0; }
@@ -573,8 +559,7 @@ kbd{ background:var(--panel-2); border:1px solid var(--border); border-radius:3p
   .stat-grid{ grid-template-columns:1fr; }
   .tbar-meter{ max-width:none; }
   .timer-week{ flex-wrap:wrap; gap:12px; }
-  .review-head{ flex-wrap:wrap; gap:6px 10px; }
-  .review-actions{ margin-left:0; width:100%; }
+  .review-banner{ flex-wrap:wrap; gap:10px; }
   .review-stats{ gap:16px; }
   .chart-wrap{ gap:5px; }
   .modal{ width:auto; max-width:92vw; }
@@ -1498,7 +1483,24 @@ function renderDashboard(main){
   </div>`;
 
   if(shouldShowWeeklyReview()){
-    html += reviewBannerHtml(addDays(thisWeekStart, -7), thisWeekStart);
+    const lastWeekStart = thisWeekStart - 7*86400000;
+    const lastWeekEnd = thisWeekStart;
+    const doneLastWeek = tasks.filter(t=>t.done && t.completedAt && t.completedAt>=lastWeekStart && t.completedAt<lastWeekEnd).length;
+    const carried = tasks.filter(t=>!t.done && !t.cancelled && t.createdAt<lastWeekEnd).length;
+    const timeLastWeek = weeklyTimeTotals(lastWeekStart);
+    html += `
+    <div class="review-banner">
+      <div style="flex:1">
+        <div class="review-title">Revue de la semaine dernière</div>
+        <div class="review-stats">
+          <div><div class="review-stat-num">${doneLastWeek}</div><div class="review-stat-label">Tâches validées</div></div>
+          <div><div class="review-stat-num">${carried}</div><div class="review-stat-label">Reportées à cette semaine</div></div>
+          <div><div class="review-stat-num">${fmtDuration(timeLastWeek.meeting)}</div><div class="review-stat-label">Temps en réunion</div></div>
+          <div><div class="review-stat-num">${fmtDuration(timeLastWeek.progress)}</div><div class="review-stat-label">Temps d'avancement</div></div>
+        </div>
+      </div>
+      <button class="review-close" id="review-close" title="Fermer">✕</button>
+    </div>`;
   }
 
   html += `
@@ -1618,11 +1620,6 @@ function renderDashboard(main){
   });
   const closeBtn = document.getElementById('review-close');
   if(closeBtn) closeBtn.onclick = dismissWeeklyReview;
-  const copyBtn = document.getElementById('review-copy');
-  if(copyBtn) copyBtn.onclick = ()=>{
-    const start = startOfWeekMonday(now());
-    copyText(reviewPlainText(addDays(start, -7), start));
-  };
 
   document.getElementById('timer-meeting').onclick = ()=> toggleTimer('meeting');
   document.getElementById('timer-progress').onclick = ()=> toggleTimer('progress');
@@ -1660,111 +1657,6 @@ function daysAgoLabel(ts){
   if(d<=0) return "aujourd'hui";
   if(d===1) return 'hier';
   return `il y a ${d} jours`;
-}
-
-/* Ce qui a occupé la semaine écoulée, projet par projet : les tâches
-   validées et les réunions dont on a pris note. Le suivi du temps est
-   global et non rattaché à un projet, il ne peut donc pas être ventilé
-   ici — seuls les totaux de la semaine sont donnés. */
-function weeklyReviewData(from, to){
-  const projects = [];
-  let doneCount = 0, meetingCount = 0;
-  state.projects.forEach(p=>{
-    const done = p.tasks
-      .filter(t=>t.done && t.completedAt && t.completedAt>=from && t.completedAt<to)
-      .sort((a,b)=>a.completedAt-b.completedAt);
-    const meetings = p.docs
-      .filter(d=>d.meetingMs && d.createdAt>=from && d.createdAt<to)
-      .sort((a,b)=>a.createdAt-b.createdAt);
-    if(done.length || meetings.length){
-      projects.push({project:p, done, meetings});
-      doneCount += done.length;
-      meetingCount += meetings.length;
-    }
-  });
-  projects.sort((a,b)=> (b.done.length+b.meetings.length) - (a.done.length+a.meetings.length));
-  const carried = allTasks().filter(t=>!t.done && !t.cancelled && t.createdAt<to).length;
-  return {projects, doneCount, meetingCount, carried, time:weeklyTimeTotals(from), from, to};
-}
-function weekRangeLabel(from, to){
-  const a = new Date(from), b = new Date(to - 86400000);
-  const opts = {day:'numeric', month:'long'};
-  const sameMonth = a.getMonth()===b.getMonth();
-  return `du ${a.toLocaleDateString('fr-FR', sameMonth? {day:'numeric'} : opts)} au ${b.toLocaleDateString('fr-FR', opts)}`;
-}
-function reviewBannerHtml(from, to){
-  const r = weeklyReviewData(from, to);
-  const detail = r.projects.length ? `
-    <div class="review-detail">
-      <div class="review-sub">Ce qui m'a occupé</div>
-      ${r.projects.map(({project, done, meetings})=>`
-        <div class="review-proj">
-          <div class="review-proj-head">
-            <span class="dot" style="background:${project.color}"></span>
-            <span>${escapeHtml(project.name)}</span>
-            <span class="review-proj-count">${[
-              done.length ? done.length+(done.length>1?' validées':' validée') : '',
-              meetings.length ? meetings.length+(meetings.length>1?' réunions':' réunion') : ''
-            ].filter(Boolean).join(' · ')}</span>
-          </div>
-          <div class="review-proj-items">
-            ${done.length ? done.map(t=>escapeHtml(t.text)).join(' · ') : ''}
-            ${meetings.length ? (done.length?'<br>':'') + `<span class="review-tag">Réunions</span> ` + meetings.map(m=>`${escapeHtml(m.title)} (${fmtDuration(m.meetingMs)})`).join(' · ') : ''}
-          </div>
-        </div>`).join('')}
-    </div>`
-    : `<div class="review-detail"><div class="review-none">Rien n'a été validé la semaine dernière, et aucune réunion n'a été notée.</div></div>`;
-
-  return `
-  <div class="review-banner">
-    <div class="review-head">
-      <span class="review-title">Revue de la semaine dernière</span>
-      <span class="review-range">${escapeHtml(weekRangeLabel(from, to))}</span>
-      <span class="review-actions">
-        <button class="btn" id="review-copy">Copier pour l'équipe</button>
-        <button class="review-close" id="review-close" title="Fermer">✕</button>
-      </span>
-    </div>
-    <div class="review-stats">
-      <div><div class="review-stat-num">${r.doneCount}</div><div class="review-stat-label">Tâches validées</div></div>
-      <div><div class="review-stat-num">${r.carried}</div><div class="review-stat-label">Reportées à cette semaine</div></div>
-      <div><div class="review-stat-num">${fmtDuration(r.time.meeting)}</div><div class="review-stat-label">Temps en réunion</div></div>
-      <div><div class="review-stat-num">${fmtDuration(r.time.progress)}</div><div class="review-stat-label">Temps d'avancement</div></div>
-    </div>
-    ${detail}
-  </div>`;
-}
-/* Version texte, prête à coller dans un message à l'équipe. */
-function reviewPlainText(from, to){
-  const r = weeklyReviewData(from, to);
-  const out = [`Semaine ${weekRangeLabel(from, to)}`, ''];
-  out.push(`${r.doneCount} tâche${r.doneCount>1?'s':''} validée${r.doneCount>1?'s':''}, ${r.carried} reportée${r.carried>1?'s':''}.`);
-  out.push(`Temps : ${fmtDuration(r.time.meeting)} en réunion, ${fmtDuration(r.time.progress)} d'avancement.`);
-  r.projects.forEach(({project, done, meetings})=>{
-    out.push('', project.name);
-    done.forEach(t=> out.push(`- ${t.text}`));
-    meetings.forEach(m=> out.push(`- Réunion : ${m.title} (${fmtDuration(m.meetingMs)})`));
-  });
-  if(!r.projects.length) out.push('', "Rien de validé cette semaine-là.");
-  return out.join('\n');
-}
-/* Le presse-papiers moderne peut être refusé selon le contexte : on garde
-   une méthode de repli plutôt que d'échouer sans rien dire. */
-function copyText(text){
-  const fallback = ()=>{
-    const ta = document.createElement('textarea');
-    ta.value = text;
-    ta.style.position='fixed'; ta.style.opacity='0';
-    document.body.appendChild(ta);
-    ta.select();
-    let ok=false;
-    try{ ok = document.execCommand('copy'); }catch(e){ ok=false; }
-    document.body.removeChild(ta);
-    toast(ok ? 'Récapitulatif copié.' : 'Copie impossible : sélectionne le texte à la main.');
-  };
-  if(navigator.clipboard && navigator.clipboard.writeText){
-    navigator.clipboard.writeText(text).then(()=>toast('Récapitulatif copié.'), fallback);
-  } else fallback();
 }
 
 function shouldShowWeeklyReview(){
